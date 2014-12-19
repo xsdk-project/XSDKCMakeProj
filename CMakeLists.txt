@@ -1,14 +1,7 @@
 #
 # Testing driver project for XSDK CMake specification
 #
-# This CMake project should be configured with:
-#
-#   cmake  -DCXX_COMPILER_1=<fullPathCxx1> \
-#     -DCXX_COMPILER_2=<fullPathCxx2> \
-#
-# and a C++ compiler should be found by default which is different than these
-# two compilers given above.  That way we can test the behavior of our mock
-# XDSK CMake project.
+# See README.rst for details.
 #
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
