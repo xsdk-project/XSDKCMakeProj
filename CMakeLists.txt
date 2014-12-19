@@ -27,6 +27,18 @@ SET(CXX_DEFAUT_COMPILER  "${CMAKE_CXX_COMPILER}")
 INCLUDE(CTest)
 ENABLE_TESTING()
 
+#
+# Print var
+#
+FUNCTION(PRINT_VAR  VAR_NAME)
+  MESSAGE("${VAR_NAME} = '${${VAR_NAME}}'")
+ENDFUNCTION()
+
+
+PRINT_VAR(CXX_COMPILER_1)
+PRINT_VAR(CXX_COMPILER_2)
+PRINT_VAR(CXX_DEFAUT_COMPILER)
+
 
 #
 # Replace regex chars with brachet chars
@@ -64,8 +76,8 @@ ENDFUNCTION()
 #
 
 FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
+  USE_XSDK_DEFAULTS  XSDK_USE_COMPILER_ENV_VARS
   ENV_CXX_TO_USE  CMAKE_CXX_TO_USE
-  USE_XSDK_DEFAULTS  GET_COMPILER_DEFAULTS_FROM_ENV
   PASS_MATCH_STRING
   )
  
@@ -79,28 +91,112 @@ FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
   ENDIF()
   FILE(MAKE_DIRECTORY ${TEST_DIR})
 
+  IF (CMAKE_CXX_TO_USE)
+    SET(CMAKE_CXX_TO_USE_ARGS  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_TO_USE})
+  ENDIF()
+
   ADD_TEST (${TEST_NAME}
     ${CMAKE_COMMAND}
+    -DUSE_XSDK_DEFAULTS=${USE_XSDK_DEFAULTS}
+    -DXSDK_USE_COMPILER_ENV_VARS=${XSDK_USE_COMPILER_ENV_VARS}
+    ${CMAKE_CXX_TO_USE_ARGS}
     ${EXAMPLE_DRIVER_PROJ_DIR}
     )
 
   REPLACE_REGEX_CHARS_WITH_BRACKET_CHARS("${PASS_MATCH_STRING}"
     PASS_REGEX_STRING)
-   MESSAGE("PASS_REGEX_STRING = '${PASS_REGEX_STRING}'")
 
   SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES
     WORKING_DIRECTORY  "${TEST_DIR}"  
     PASS_REGULAR_EXPRESSION  "${PASS_REGEX_STRING}"  
+    ENVIRONMENT CXX=${ENV_CXX_TO_USE}
     )
 
 ENDFUNCTION()
 
 
 #
-# Define the test cases
+# Test cases NoUseXsdkDefaults_NoUseCompilerEnvVars
 # 
 
-ADD_XSDK_TEST_CASE(RawDefaults  ""  ""  FALSE  FALSE
-  "CMAKE_CXX_COMPILER = ${CXX_DEFAUT_COMPILER}"
-#  "CMAKE_CXX_COMPILER = /projects/vera/gcc-4[.]6[.]1/toolset/gcc-4[.]6[.]1/bin/c[+][+]"
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_none_none
+  FALSE  FALSE
+  ""  ""
+  "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  )
+
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_cxx1_none
+  FALSE  FALSE
+  "${CXX_COMPILER_1}"  ""
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
+  )
+
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_none_cxx2
+  FALSE  FALSE
+  ""  "${CXX_COMPILER_2}"
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  )
+
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
+  FALSE  FALSE
+  "${CXX_COMPILER_1}"  "${CXX_COMPILER_2}"
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  )
+
+
+#
+# Test cases UseXsdkDefaults_NoUseCompilerEnvVars
+# 
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_none_none
+  TRUE  FALSE
+  ""  ""
+  "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  )
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_cxx1_none
+  TRUE  FALSE
+  "${CXX_COMPILER_1}"  ""
+  "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  )
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_none_cxx2
+  TRUE  FALSE
+  ""  "${CXX_COMPILER_2}"
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  )
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
+  TRUE  FALSE
+  "${CXX_COMPILER_1}"  "${CXX_COMPILER_2}"
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  )
+
+
+#
+# Test cases UseXsdkDefaults_UseCompilerEnvVars
+# 
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_none
+  TRUE  TRUE
+  ""  ""
+  "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  )
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_none
+  TRUE  TRUE
+  "${CXX_COMPILER_1}"  ""
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
+  )
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_cxx2
+  TRUE  TRUE
+  ""  "${CXX_COMPILER_2}"
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  )
+
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_cxx2
+  TRUE  TRUE
+  "${CXX_COMPILER_1}"  "${CXX_COMPILER_2}"
+  "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   )
