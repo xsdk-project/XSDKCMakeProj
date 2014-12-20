@@ -9,17 +9,17 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 SET(PROJECT_NAME XSDKCMakeProj)
 PROJECT(${PROJECT_NAME}  CXX)
 
-SET(CXX_COMPILER_1  ""  CACHE FILEPATH
+SET(CXX_COMPILER_1  "/usr/bin/c++"  CACHE FILEPATH
   "One valid C++ compiler to test with" )
-SET(CXX_COMPILER_2  ""  CACHE FILEPATH
+SET(CXX_COMPILER_2  "/usr/bin/g++"  CACHE FILEPATH
   "Second valid C++ compiler to test with" )
 # This is the compiler that CMake finds by default
 SET(CXX_DEFAUT_COMPILER  "${CMAKE_CXX_COMPILER}")
 
 # Pull in TriBITS so we can use TRIBITS_ADD_ADVANCED_TEST() and some other
 # functions (but this is *not* a TriBITS project.
-SET(${PROJECT_NAME}_TRIBITS_DIR  "${TRIBITS_DIR}"  CACHE PATH
- "Set in CMakeLists.txt" )
+SET(${PROJECT_NAME}_TRIBITS_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/tribits"
+ CACHE  PATH  "Set in CMakeLists.txt" )
 INCLUDE("${${PROJECT_NAME}_TRIBITS_DIR}/TriBITS.cmake")
 
 INCLUDE(CTest)
