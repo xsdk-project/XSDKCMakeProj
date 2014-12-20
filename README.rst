@@ -28,5 +28,8 @@ mock XSDK CMake project which is contained in the directory::
 and contains a single ``CMakeLists.txt`` file.
 
 NOTE: The outer test CMake project snapshots TriBITS core in order to use the
-TRIBITS_ADD_ADVANCED_TEST() function in order to make it easier to write
-stronger tests for ``XSDKDefaults.cmake``.  But his is not a TriBITS project.
+`TRIBITS_ADD_ADVANCED_TEST()`_ function in order to make it easier to write
+stronger tests for ``XSDKDefaults.cmake``.  But this is **not** a TriBITS
+project.
+
+.. _TRIBITS_ADD_ADVANCED_TEST(): https://tribits.org/doc/TribitsDevelopersGuide.html#tribits-add-advanced-test 
