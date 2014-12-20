@@ -19,17 +19,17 @@ IF (USE_XSDK_DEFAULTS  AND  NOT  XSDK_USE_COMPILER_ENV_VARS)
   SET(GET_COMPILER_DEFAULTS_FROM_ENV  FALSE)
 ENDIF()
 
-# B) Set defaults from env vars is asked and otherwise ignore the env vars
+# B) Set defaults from env vars if asked and otherwise ignore the env vars
 # (which goes against default CMake behavior),
 
 IF (GET_COMPILER_DEFAULTS_FROM_ENV)
   IF (NOT "$ENV{CXX}" STREQUAL "" AND "${CMAKE_CXX_COMPILER}" STREQUAL "")
-    MESSAGE("Setting CMAKE_CXX_COMPILER from env var CXX!")
+    MESSAGE("Setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
     SET(CMAKE_CXX_COMPILER "$ENV{CXX}" CACHE FILEPATH "Set from env var CXX")  
   ENDIF()
 ELSE()
   IF (NOT "$ENV{CXX}" STREQUAL "" AND "${CMAKE_CXX_COMPILER}" STREQUAL "")
-    MESSAGE("NOT setting CMAKE_CXX_COMPILER from env var CXX!")
+    MESSAGE("NOT setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
     # Got to find the default C++ compiler so this does not pick up the CXX
     # set in the env!
     FIND_PROGRAM( DEFAULT_CXX_COMPILER  NAMES  c++  g++ )

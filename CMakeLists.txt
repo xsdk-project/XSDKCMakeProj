@@ -6,26 +6,24 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 
-PROJECT(XSDKCMakeProj CXX)
+SET(PROJECT_NAME XSDKCMakeProj)
+PROJECT(${PROJECT_NAME}  CXX)
 
 SET(CXX_COMPILER_1  ""  CACHE FILEPATH
   "One valid C++ compiler to test with" )
-
 SET(CXX_COMPILER_2  ""  CACHE FILEPATH
   "Second valid C++ compiler to test with" )
-
 # This is the compiler that CMake finds by default
 SET(CXX_DEFAUT_COMPILER  "${CMAKE_CXX_COMPILER}")
 
+# Pull in TriBITS so we can use TRIBITS_ADD_ADVANCED_TEST() and some other
+# functions (but this is *not* a TriBITS project.
+SET(${PROJECT_NAME}_TRIBITS_DIR  "${TRIBITS_DIR}"  CACHE PATH
+ "Set in CMakeLists.txt" )
+INCLUDE("${${PROJECT_NAME}_TRIBITS_DIR}/TriBITS.cmake")
+
 INCLUDE(CTest)
 ENABLE_TESTING()
-
-#
-# Print var
-#
-FUNCTION(PRINT_VAR  VAR_NAME)
-  MESSAGE("${VAR_NAME} = '${${VAR_NAME}}'")
-ENDFUNCTION()
 
 
 #
@@ -96,45 +94,45 @@ FUNCTION(REPLACE_REGEX_CHARS_WITH_BRACKET_CHARS  STR_IN  STR_OUT)
 ENDFUNCTION()
 
 
+#
+# Define a function to do a test using TRIBITS_ADD_ADVANCED_TEST()
+#
 
-#
-# Define a function to do a test
-#
+# Set some vars so we can use it!
+SET(${PROJECT_NAME}_TEST_CATEGORIES BASIC)
+SET(${PROJECT_NAME}_HOSTNAME dummy)
+
+INCLUDE(TribitsAddAdvancedTest)
 
 FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
   USE_XSDK_DEFAULTS  XSDK_USE_COMPILER_ENV_VARS
   ENV_CXX_TO_USE  CMAKE_CXX_TO_USE
-  PASS_MATCH_STRING
   )
  
   SET(EXAMPLE_DRIVER_PROJ_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/example_driver")
 
-  SET(TEST_DIR  "${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}")
-
-  # Remove then create the test directroy
-  IF (EXISTS ${TEST_DIR})
-    FILE(REMOVE_RECURSE ${TEST_DIR})
-  ENDIF()
-  FILE(MAKE_DIRECTORY ${TEST_DIR})
+  SET(PASS_REGEX_STR_ARRAY)  
+  FOREACH(PASS_REGEX_STR  ${ARGN})
+    REPLACE_REGEX_CHARS_WITH_BRACKET_CHARS("${PASS_REGEX_STR}"
+      PASS_REGEX_STRING)
+    LIST(APPEND PASS_REGEX_STR_ARRAY "${PASS_REGEX_STRING}")
+  ENDFOREACH()
 
   IF (CMAKE_CXX_TO_USE)
     SET(CMAKE_CXX_TO_USE_ARGS  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_TO_USE})
   ENDIF()
 
-  ADD_TEST (${TEST_NAME}
-    ${CMAKE_COMMAND}
-    -DUSE_XSDK_DEFAULTS=${USE_XSDK_DEFAULTS}
-    -DXSDK_USE_COMPILER_ENV_VARS=${XSDK_USE_COMPILER_ENV_VARS}
-    ${CMAKE_CXX_TO_USE_ARGS}
-    ${EXAMPLE_DRIVER_PROJ_DIR}
-    )
-
-  REPLACE_REGEX_CHARS_WITH_BRACKET_CHARS("${PASS_MATCH_STRING}"
-    PASS_REGEX_STRING)
-
-  SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES
-    WORKING_DIRECTORY  "${TEST_DIR}"  
-    PASS_REGULAR_EXPRESSION  "${PASS_REGEX_STRING}"  
+  TRIBITS_ADD_ADVANCED_TEST(${TEST_NAME}
+    OVERALL_WORKING_DIRECTORY  TEST_NAME
+    TEST_0
+      CMND  ${CMAKE_COMMAND}
+      ARGS
+        -DUSE_XSDK_DEFAULTS=${USE_XSDK_DEFAULTS}
+        -DXSDK_USE_COMPILER_ENV_VARS=${XSDK_USE_COMPILER_ENV_VARS}
+        ${CMAKE_CXX_TO_USE_ARGS}
+        ${EXAMPLE_DRIVER_PROJ_DIR}
+      PASS_REGULAR_EXPRESSION_ALL
+        ${PASS_REGEX_STR_ARRAY}
     ENVIRONMENT CXX=${ENV_CXX_TO_USE}
     )
 
@@ -148,24 +146,35 @@ ENDFUNCTION()
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_none_none
   FALSE  FALSE
   ""  ""
+  "USE_XSDK_DEFAULTS = 'FALSE'"
+  "XSDK_USE_COMPILER_ENV_VARS = 'FALSE'"
+  "Before: CMAKE_CXX_COMPILER = ''"
+  "Before: CMAKE_CXX_FLAGS = ''"
+  "Before: BUILD_SHARED_LIBS"
   "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  "After: CMAKE_CXX_FLAGS = ''"
+  "After: BUILD_SHARED_LIBS = ''"
   )
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_cxx1_none
   FALSE  FALSE
   "${CXX_COMPILER_1}"  ""
+  "Setting CMAKE_CXX_COMPILER from env var CXX='${CXX_COMPILER_1}'!"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
   )
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_none_cxx2
   FALSE  FALSE
   ""  "${CXX_COMPILER_2}"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   )
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
   FALSE  FALSE
   "${CXX_COMPILER_1}"  "${CXX_COMPILER_2}"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   )
 
@@ -177,24 +186,29 @@ ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_none_none
   TRUE  FALSE
   ""  ""
+  "Before: CMAKE_CXX_COMPILER = ''"
   "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_cxx1_none
   TRUE  FALSE
   "${CXX_COMPILER_1}"  ""
+  "NOT setting CMAKE_CXX_COMPILER from env var CXX='${CXX_COMPILER_1}'!"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_none_cxx2
   TRUE  FALSE
   ""  "${CXX_COMPILER_2}"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
   TRUE  FALSE
   "${CXX_COMPILER_1}"  "${CXX_COMPILER_2}"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   )
 
@@ -206,23 +220,28 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_none
   TRUE  TRUE
   ""  ""
+  "Before: CMAKE_CXX_COMPILER = ''"
   "After: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_none
   TRUE  TRUE
   "${CXX_COMPILER_1}"  ""
+  "Setting CMAKE_CXX_COMPILER from env var CXX='${CXX_COMPILER_1}'!"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_cxx2
   TRUE  TRUE
   ""  "${CXX_COMPILER_2}"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_cxx2
   TRUE  TRUE
   "${CXX_COMPILER_1}"  "${CXX_COMPILER_2}"
+  "Before: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "After: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   )
