@@ -15,7 +15,18 @@ To configure and run the tests, just do::
 
 Here, a default C++ compiler should be found in the env var ``${PATH}`` which
 different than these two compilers ``<fullPathCxx1>`` and ``<fullPathCxx2>``.
-That way we can test the behavior of our mock xDSK CMake project which is
-contained in the directory::
+These have defaults ``/usr/bin/c++`` and ``/usr/bin/g++`` respectively.
+
+The defaults and behaviors are implemented in the stand-alone CMake module
+``XSDKDefaults.cmake``.
+
+That way we test the behavior of the module ``XSDKDefaults.cmake`` is using a
+mock XSDK CMake project which is contained in the directory::
 
   example_driver/
+
+and contains a single ``CMakeLists.txt`` file.
+
+NOTE: The outer test CMake project snapshots TriBITS core in order to use the
+TRIBITS_ADD_ADVANCED_TEST() function in order to make it easier to write
+stronger tests for ``XSDKDefaults.cmake``.  But his is not a TriBITS project.

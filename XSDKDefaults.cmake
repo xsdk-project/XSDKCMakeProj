@@ -5,7 +5,12 @@
 ##################################################################################
 
 
-# A) Determine if to set compiler defaults from env var.
+FUNCTION(PRINT_VAR  VAR_NAME)
+  MESSAGE("${VAR_NAME} = '${${VAR_NAME}}'")
+ENDFUNCTION()
+
+
+# A) Set options
 
 SET(USE_XSDK_DEFAULTS  OFF  CACHE  BOOL
   "Use XSDK defaults and behavior.")
@@ -13,12 +18,18 @@ SET(USE_XSDK_DEFAULTS  OFF  CACHE  BOOL
 SET(XSDK_USE_COMPILER_ENV_VARS  OFF  CACHE  BOOL
   "When in XSDK mode, read defaults for compilers and flags from env.")
 
+PRINT_VAR(USE_XSDK_DEFAULTS)
+PRINT_VAR(XSDK_USE_COMPILER_ENV_VARS)
+
+
+# B) Determine if to set compiler defaults from env var.
+
 SET(GET_COMPILER_DEFAULTS_FROM_ENV  TRUE)
 IF (USE_XSDK_DEFAULTS  AND  NOT  XSDK_USE_COMPILER_ENV_VARS)
   SET(GET_COMPILER_DEFAULTS_FROM_ENV  FALSE)
 ENDIF()
 
-# B) Set defaults from env vars if asked and otherwise ignore the env vars
+# C) Set defaults from env vars if asked and otherwise ignore the env vars
 # (which goes against default CMake behavior),
 
 IF (GET_COMPILER_DEFAULTS_FROM_ENV)
@@ -26,6 +37,7 @@ IF (GET_COMPILER_DEFAULTS_FROM_ENV)
     MESSAGE("Setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
     SET(CMAKE_CXX_COMPILER "$ENV{CXX}" CACHE FILEPATH "Set from env var CXX")
   ENDIF()
+  # ToDo: Handle $ENV{CXXFLAGS} and CMAKE_CXX_FLAGS
 ELSE()
   IF (NOT "$ENV{CXX}" STREQUAL "" AND "${CMAKE_CXX_COMPILER}" STREQUAL "")
     MESSAGE("NOT setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
@@ -35,9 +47,10 @@ ELSE()
     SET(CMAKE_CXX_COMPILER "${DEFAULT_CXX_COMPILER}" CACHE FILEPATH
       "Ignoring default set by env var CXX")
   ENDIF()
+  # ToDo: Handle $ENV{CXXFLAGS} and CMAKE_CXX_FLAGS
 ENDIF()
 
-# C) Set defaults for other variables
+# D) Set defaults for other variables
 
 IF (USE_XSDK_DEFAULTS)
 
