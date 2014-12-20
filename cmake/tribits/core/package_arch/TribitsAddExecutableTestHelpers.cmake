@@ -1,0 +1,68 @@
+
+INCLUDE(AdvancedSet)
+INCLUDE(MessageWrapper)
+
+ADVANCED_SET( ${PROJECT_NAME}_CMAKE_EXECUTABLE_SUFFIX ".exe"
+  CACHE STRING
+  "Default exec suffix on all platforms (can be overridden by each executable added)." )
+
+
+FUNCTION( TRIBITS_PROCESS_COMM_ARGS  ADD_SERIAL_FEATURE_OUT  ADD_MPI_FEATURE_OUT )
+
+  SET(COMM_ARRAY ${ARGN})
+
+  IF (COMM_ARRAY)
+    SET(ADD_SERIAL_FEATURE OFF)
+    SET(ADD_MPI_FEATURE OFF)
+    FOREACH(COMM ${COMM_ARRAY})
+      IF(${COMM} STREQUAL "serial")
+        SET(ADD_SERIAL_FEATURE ON)
+      ELSEIF (${COMM} STREQUAL "mpi")
+        SET(ADD_MPI_FEATURE ON)
+      ELSE()
+        MESSAGE(SEND_ERROR "Error, the COMM value '${COMM}' is not valid."
+          "  Only 'mpi' and 'serial' are allowed.")
+      ENDIF()
+    ENDFOREACH()
+  ELSE()
+    SET(ADD_MPI_FEATURE ON)
+    SET(ADD_SERIAL_FEATURE ON)
+  ENDIF()
+
+  IF (TPL_ENABLE_MPI)
+    SET(ADD_SERIAL_FEATURE OFF)
+    IF (NOT ADD_MPI_FEATURE)
+      SET(EXCLUDED_FEATURE TRUE)
+    ENDIF()
+  ELSE()
+    SET(ADD_MPI_FEATURE OFF)
+    IF (NOT ADD_SERIAL_FEATURE)
+      SET(EXCLUDED_FEATURE TRUE)
+    ENDIF()
+  ENDIF()
+
+  IF (TEST_NAME AND EXCLUDED_FEATURE)
+    MESSAGE_WRAPPER(
+      "-- ${TEST_NAME}: NOT added test because TPL_ENABLE_MPI='${TPL_ENABLE_MPI}' and COMM='${COMM_ARRAY}'!"
+      )
+  ENDIF()
+
+  SET(${ADD_SERIAL_FEATURE_OUT} ${ADD_SERIAL_FEATURE} PARENT_SCOPE)
+  SET(${ADD_MPI_FEATURE_OUT} ${ADD_MPI_FEATURE}  PARENT_SCOPE)
+
+ENDFUNCTION()
+
+
+FUNCTION( TRIBITS_CREATE_NAME_FROM_CURRENT_SOURCE_DIRECTORY DIRECTORY_NAME )
+    SET(DIRECTORY_NAME "")
+    STRING(REGEX REPLACE ${PACKAGE_SOURCE_DIR} "" unique_dir_path
+      ${CMAKE_CURRENT_SOURCE_DIR})
+
+    STRING(LENGTH ${unique_dir_path} udp_length)
+    MATH(EXPR last_index "${udp_length}-1")
+    STRING(SUBSTRING ${unique_dir_path} 1 ${last_index} unique_dir_path)
+
+    STRING(REGEX REPLACE "/" "_" DIRECTORY_NAME ${unique_dir_path})
+
+    SET(DIRECTORY_NAME ${DIRECTORY_NAME} PARENT_SCOPE)
+ENDFUNCTION()
