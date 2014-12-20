@@ -123,6 +123,10 @@ FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
     SET(CMAKE_CXX_TO_USE_ARGS  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_TO_USE})
   ENDIF()
 
+  IF (CMAKE_CXX_FLAGS_TO_USE)
+    SET(CMAKE_CXX_FLAGS_TO_USE_ARGS  -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS_TO_USE})
+  ENDIF()
+
   TRIBITS_ADD_ADVANCED_TEST(${TEST_NAME}
     OVERALL_WORKING_DIRECTORY  TEST_NAME
     TEST_0
@@ -131,10 +135,11 @@ FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
         -DUSE_XSDK_DEFAULTS=${USE_XSDK_DEFAULTS}
         -DXSDK_USE_COMPILER_ENV_VARS=${XSDK_USE_COMPILER_ENV_VARS}
         ${CMAKE_CXX_TO_USE_ARGS}
+        ${CMAKE_CXX_FLAGS_TO_USE_ARGS}
         ${EXAMPLE_DRIVER_PROJ_DIR}
       PASS_REGULAR_EXPRESSION_ALL
         ${PASS_REGEX_STR_ARRAY}
-    ENVIRONMENT CXX=${ENV_CXX_TO_USE}
+    ENVIRONMENT CXX=${ENV_CXX_TO_USE}  CXXFLAGS=${ENV_CXX_FLAGS_TO_USE}
     )
 
 ENDFUNCTION()
@@ -166,30 +171,38 @@ ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_none_none
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_cxx1_none
   FALSE  FALSE
-  "${CXX_COMPILER_1}"  ""
+  "${CXX_COMPILER_1}"  "-Wall"
   ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
-  "Setting CMAKE_CXX_COMPILER from env var CXX='${CXX_COMPILER_1}'!"
-  "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
+  "Before XSDK: CMAKE_CXX_FLAGS = ''"
+  "Before EL: CMAKE_CXX_COMPILER = ''"
+  "Before EL: CMAKE_CXX_FLAGS = ''"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wall '"
   )
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_none_cxx2
   FALSE  FALSE
   ""  ""
-  "${CXX_COMPILER_2}"  ""
+  "${CXX_COMPILER_2}"  "-Wlong-long"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
   FALSE  FALSE
-  "${CXX_COMPILER_1}"  ""
-  "${CXX_COMPILER_2}"  ""
+  "${CXX_COMPILER_1}"  "-Wall"
+  "${CXX_COMPILER_2}"  "-Wlong-long"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
 
@@ -215,30 +228,40 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_none_none
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_cxx1_none
   TRUE  FALSE
-  "${CXX_COMPILER_1}"  ""
+  "${CXX_COMPILER_1}"  "-Wall"
   ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
+  "Before XSDK: CMAKE_CXX_FLAGS = ''"
   "NOT setting CMAKE_CXX_COMPILER from env var CXX='${CXX_COMPILER_1}'!"
+  "NOT setting CMAKE_CXX_FLAGS from env var CXXFLAGS='-Wall'!"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  "Before EL: CMAKE_CXX_FLAGS = ''"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  "After EL: CMAKE_CXX_FLAGS = ''"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_none_cxx2
   TRUE  FALSE
   ""  ""
-  "${CXX_COMPILER_2}"  ""
+  "${CXX_COMPILER_2}"  "-Wlong-long"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_NoUseCompilerEnvVars_cxx1_cxx2
   TRUE  FALSE
-  "${CXX_COMPILER_1}"  ""
-  "${CXX_COMPILER_2}"  ""
+  "${CXX_COMPILER_1}"  "-Wall"
+  "${CXX_COMPILER_2}"  "-Wlong-long"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
 
@@ -264,28 +287,37 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_none
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_none
   TRUE  TRUE
-  "${CXX_COMPILER_1}"  ""
+  "${CXX_COMPILER_1}"  "-Wall"
   ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
+  "Before XSDK: CMAKE_CXX_FLAGS = ''"
   "Setting CMAKE_CXX_COMPILER from env var CXX='${CXX_COMPILER_1}'!"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wall '"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wall '"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_cxx2
   TRUE  TRUE
   ""  ""
-  "${CXX_COMPILER_2}"  ""
+  "${CXX_COMPILER_2}"  "-Wlong-long"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
 ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_cxx2
   TRUE  TRUE
-  "${CXX_COMPILER_1}"  ""
-  "${CXX_COMPILER_2}"  ""
+  "${CXX_COMPILER_1}"  "-Wall"
+  "${CXX_COMPILER_2}"  "-Wlong-long"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
+  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
