@@ -4,6 +4,29 @@
 #
 ##################################################################################
 
+#
+# This module implements the behavior for XSDK CMake projects.  It changes the
+# default behavior of CMake on a few fronts.  The main thing it does by
+# default is to ignore compiler vars in the env if they are set using CC, CXX,
+# FC and compiler flags CFLAGS, CXXFLAGS, and FFLAGS.
+#
+# This module must be included after:
+#
+#   PROJECT(${PROJECT_NAME}  NONE)
+#
+# is called but before the compilers are defined and processed using:
+#
+#   ENABLE_LANGAUGE(<LANG>)
+#
+# The major downside of this approach is that the default compilers are
+# searched for here instead of inside of ENABLE_LANGAUGE(<LANG>) when
+# USE_XSDK_DEFAULTS=TRUE but XSDK_USE_COMPILER_ENV_VARS=FALSE.  This is
+# because if you let it go into ENABLE_LANGAUGE(<LANG>) then it will set the
+# default compilers by reading the env vars.  So if you don't like the
+# defaults picked by this module, set XSDK_USE_COMPILER_ENV_VARS=TRUE (which
+# is the CMake default anyway).
+# 
+
 
 FUNCTION(PRINT_VAR  VAR_NAME)
   MESSAGE("${VAR_NAME} = '${${VAR_NAME}}'")
@@ -38,6 +61,7 @@ IF (GET_COMPILER_DEFAULTS_FROM_ENV)
     SET(CMAKE_CXX_COMPILER "$ENV{CXX}" CACHE FILEPATH "Set from env var CXX")
   ENDIF()
   # ToDo: Handle $ENV{CXXFLAGS} and CMAKE_CXX_FLAGS
+  # ToDo: Handle C and Fortran
 ELSE()
   IF (NOT "$ENV{CXX}" STREQUAL "" AND "${CMAKE_CXX_COMPILER}" STREQUAL "")
     MESSAGE("NOT setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
@@ -48,6 +72,7 @@ ELSE()
       "Ignoring default set by env var CXX")
   ENDIF()
   # ToDo: Handle $ENV{CXXFLAGS} and CMAKE_CXX_FLAGS
+  # ToDo: Handle C and Fortran
 ENDIF()
 
 # D) Set defaults for other variables
