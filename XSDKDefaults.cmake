@@ -43,7 +43,24 @@ IF (USE_XSDK_DEFAULTS)
 
   # Handle env vars CXX, CXXFLAGS, etc. ...
   
-  IF (NOT XSDK_USE_COMPILER_ENV_VARS)
+  IF (XSDK_USE_COMPILER_ENV_VARS)
+
+    # Announce using env var CXX
+    IF (NOT "$ENV{CXX}" STREQUAL "" AND "${CMAKE_CXX_COMPILER}" STREQUAL "")
+      MESSAGE("NOTE: Setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
+      SET(CMAKE_CXX_COMPILER "$ENV{CXX}" CACHE FILEPATH
+        "Set by default from env var CXX")
+    ENDIF()
+
+    # Announce using env var CXXFLAGS
+    IF (NOT "$ENV{CXXFLAGS}" STREQUAL "" AND "${CMAKE_CXX_FLAGS}" STREQUAL "")
+      MESSAGE("NOTE: Setting CMAKE_CXX_FLAGS from env var CXXFLAGS='$ENV{CXXFLAGS}'!")
+      SET(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} " CACHE  STRING
+        "Set by default from env var CXXFLAGS")
+      # NOTE: CMake adds the space after ${CXXFLAGS} so we duplicate that here!
+    ENDIF()
+
+  ELSE()
 
     # Ignore env var CXX
     IF (NOT "$ENV{CXX}" STREQUAL "" AND "${CMAKE_CXX_COMPILER}" STREQUAL "")

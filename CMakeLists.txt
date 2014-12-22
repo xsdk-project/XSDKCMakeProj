@@ -296,8 +296,10 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_none
   ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
   "Before XSDK: CMAKE_CXX_FLAGS = ''"
-  "Before EL: CMAKE_CXX_COMPILER = ''"
-  "Before EL: CMAKE_CXX_FLAGS = ''"
+  "NOTE: Setting CMAKE_CXX_COMPILER from env var CXX='/usr/bin/c++'!"
+  "NOTE: Setting CMAKE_CXX_FLAGS from env var CXXFLAGS='-Wall'!"
+  "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
+  "Before EL: CMAKE_CXX_FLAGS = '-Wall '"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
   "After EL: CMAKE_CXX_FLAGS = '-Wall '"
   )
