@@ -47,14 +47,14 @@ IF (USE_XSDK_DEFAULTS)
 
     # Announce using env var CXX
     IF (NOT "$ENV{CXX}" STREQUAL "" AND "${CMAKE_CXX_COMPILER}" STREQUAL "")
-      MESSAGE("NOTE: Setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
+      MESSAGE("XSDK: Setting CMAKE_CXX_COMPILER from env var CXX='$ENV{CXX}'!")
       SET(CMAKE_CXX_COMPILER "$ENV{CXX}" CACHE FILEPATH
         "Set by default from env var CXX")
     ENDIF()
 
     # Announce using env var CXXFLAGS
     IF (NOT "$ENV{CXXFLAGS}" STREQUAL "" AND "${CMAKE_CXX_FLAGS}" STREQUAL "")
-      MESSAGE("NOTE: Setting CMAKE_CXX_FLAGS from env var CXXFLAGS='$ENV{CXXFLAGS}'!")
+      MESSAGE("XSDK: Setting CMAKE_CXX_FLAGS from env var CXXFLAGS='$ENV{CXXFLAGS}'!")
       SET(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} " CACHE  STRING
         "Set by default from env var CXXFLAGS")
       # NOTE: CMake adds the space after ${CXXFLAGS} so we duplicate that here!
@@ -86,12 +86,12 @@ IF (USE_XSDK_DEFAULTS)
   # Set XSDK defaults for other CMake variables
   
   IF ("${BUILD_SHARED_LIBS}"  STREQUAL  "")
-    MESSAGE("Setting default for BUILD_SHARED_LIBS to TRUE!")
+    MESSAGE("XSDK: Setting default for BUILD_SHARED_LIBS to TRUE!")
     SET(BUILD_SHARED_LIBS  TRUE  CACHE  BOOL  "Set by default in XSDK mode")
   ENDIF()
   
   IF ("${CMAKE_BUILD_TYPE}"  STREQUAL  "")
-    MESSAGE("Setting default for CMAKE_BUILD_TYPE to DEBUG!")
+    MESSAGE("XSDK: Setting default for CMAKE_BUILD_TYPE to DEBUG!")
     SET(CMAKE_BUILD_TYPE  DEBUG  CACHE  STRING  "Set by default in XSDK mode")
   ENDIF()
 
