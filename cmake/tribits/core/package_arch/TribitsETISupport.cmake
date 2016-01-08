@@ -1,3 +1,41 @@
+# @HEADER
+# ************************************************************************
+#
+#            TriBITS: Tribal Build, Integrate, and Test System
+#                    Copyright 2013 Sandia Corporation
+#
+# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+# the U.S. Government retains certain rights in this software.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the Corporation nor the names of the
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# ************************************************************************
+# @HEADER
 
 include(AppendSet)
 include(AppendGlobalSet)
@@ -5,7 +43,13 @@ include(Split)
 include(Join)
 include(PrintVar)
 
+# this macro expands produces a list of all combinations of a variable number of lists:
+# called like TRIBITS_ETI_TYPE_EXPANSION(setvar "T=t1|t2|t3" "S=s1|s2" "V=v1")
+# returns setvar="T=T1 S=s1 V=v1;T=T1 S=s2 V=v1;
+#                 T=T2 S=s1 V=v1;T=T2 S=s2 V=v1;
+#                 T=T3 S=s1 V=v1;T=T3 S=s2 V=v1"
 FUNCTION(TRIBITS_ETI_TYPE_EXPANSION outvar first_list)
+  # extract the field name and the list of types
   IF (NOT "${first_list}" MATCHES "([^=]*)=(.*)")
     SET(${outvar} "TRIBITS_ETI_BAD_ARGUMENTS" PARENT_SCOPE)
     RETURN()
@@ -43,6 +87,7 @@ FUNCTION(TRIBITS_ETI_TYPE_EXPANSION outvar first_list)
   ENDIF()
 ENDFUNCTION()
 
+# Explode an ETI set into a variable number of named component fields
 FUNCTION(TRIBITS_ETI_EXPLODE fields inst outvar)
   foreach (field ${fields})
     IF(    "${inst}" MATCHES "( |^)${field}={([^{}$=]*)}( |$)")
@@ -60,11 +105,16 @@ FUNCTION(TRIBITS_ETI_EXPLODE fields inst outvar)
   SET(${outvar} "${result}" PARENT_SCOPE)
 ENDFUNCTION()
 
+# effectively, a tupled regex, wrapped in a for loop
+# given a list of processed excludes (a list of pipe-separated, bracket-delimited tuples of type/regexes),
+# determine whether processed_inst (a pipe-separated, bracket tuple of types) is matched
+# if the instantiation matches one of the exclusions, result is set true
 FUNCTION(TRIBITS_ETI_CHECK_EXCLUSION processed_excludes processed_inst excluded)
   SPLIT("${processed_inst}" "\\|" processed_inst)
   LIST(LENGTH processed_inst numfields)
   MATH(EXPR NFm1 "${numfields}-1")
   SET(${excluded} OFF PARENT_SCOPE)
+  # check to see whether this is excluded or not
   list(LENGTH processed_excludes numexcl)
   FOREACH(excl ${processed_excludes})
     SPLIT(${excl} "\\|" excl)
@@ -90,6 +140,9 @@ FUNCTION(TRIBITS_ETI_CHECK_EXCLUSION processed_excludes processed_inst excluded)
   ENDFOREACH()
 ENDFUNCTION()
 
+# given a list of field names and list of macrofields, translate the
+# field names in macrofields into indices corresponding to the position in
+# the list of field names
 FUNCTION(TRIBITS_ETI_INDEX_MACRO_FIELDS etifields macrofields indexvar)
   FOREACH(mf ${macrofields})
     STRING(STRIP "${mf}" mf)
@@ -102,6 +155,7 @@ FUNCTION(TRIBITS_ETI_INDEX_MACRO_FIELDS etifields macrofields indexvar)
   SET(${indexvar} ${inds} PARENT_SCOPE)
 ENDFUNCTION()
 
+# given a macro name and a list of tuples, generate a macro string
 FUNCTION(TRIBITS_ETI_BUILD_MACRO_STRING macroname tuplelist outvar)
   SET(str "#define ${macroname}(INSTMACRO)")
   FOREACH(tuple ${tuplelist})
@@ -112,6 +166,7 @@ FUNCTION(TRIBITS_ETI_BUILD_MACRO_STRING macroname tuplelist outvar)
   SET(${outvar} ${str} PARENT_SCOPE)
 ENDFUNCTION()
 
+# utility for adding eti support to another package's library set
 FUNCTION(TRIBITS_ADD_ETI_INSTANTIATIONS PACKAGE)
   IF(${PROJECT_NAME}_VERBOSE_CONFIGURE)
     MESSAGE(STATUS "Adding instantiations to ${PACKAGE} library set...")
@@ -119,6 +174,7 @@ FUNCTION(TRIBITS_ADD_ETI_INSTANTIATIONS PACKAGE)
   APPEND_GLOBAL_SET(${PACKAGE}_ETI_LIBRARYSET ${ARGN})
 ENDFUNCTION()
 
+# utility for mangling type names to make them safe for the C preprocessor
 FUNCTION(TRIBITS_ETI_MANGLE_SYMBOL
          mangledvar
          input)
@@ -134,6 +190,8 @@ FUNCTION(TRIBITS_ETI_MANGLE_SYMBOL
   SET(${mangledvar} "${newvar}" PARENT_SCOPE)
 ENDFUNCTION()
 
+# utility for mangling type names to make them safe for the C preprocessor
+# upon mangling, it automatically inserts an ifdef into the mangling macro
 FUNCTION(TRIBITS_ETI_MANGLE_SYMBOL_AUGMENT_MACRO
          typedefvar
          symbolvar
@@ -153,6 +211,7 @@ FUNCTION(TRIBITS_ETI_MANGLE_SYMBOL_AUGMENT_MACRO
   ENDIF()
 ENDFUNCTION()
 
+# generate the macros
 FUNCTION(TRIBITS_ETI_GENERATE_MACROS etifields etisetvar etiexcludelist manglinglistvar typedeflistvar)
   SET(manglinglist  "${${manglinglistvar}}")
   SET(typedeflist   "${${typedeflistvar}}")
@@ -162,10 +221,13 @@ FUNCTION(TRIBITS_ETI_GENERATE_MACROS etifields etisetvar etiexcludelist mangling
     MESSAGE(STATUS "ETI set: ${etisetvar}")
     MESSAGE(STATUS "ETI excludes: ${etiexcludelist}")
   ENDIF()
+  # we make lists of tuples first, because we want to make sure they don't have duplicates
+  # this algorithm is O(N^2) in the number of instantiations in etisetvar
   MATH(EXPR num_macros "(${ARGC}-5)/2")
   IF(${num_macros} EQUAL 0)
     RETURN()
   ENDIF()
+  # process macro fields into a list of indices
   FOREACH(m RANGE 1 ${num_macros})
     MATH(EXPR m2   "(${m}-1)*2")
     MATH(EXPR m2p1 "${m2}+1")
@@ -179,6 +241,7 @@ FUNCTION(TRIBITS_ETI_GENERATE_MACROS etifields etisetvar etiexcludelist mangling
       MESSAGE(STATUS "Parsed macro ${macroname${m}}(${macrofields${m}}) into variable ${macrovar${m}} (index list ${macroindex${m}})")
     ENDIF()
   ENDFOREACH()
+  # process the exclusions once
   FOREACH(excl ${etiexcludelist})
     TRIBITS_ETI_EXPLODE("${etifields}" "${excl}" e_excl)
     IF("${e_excl}" STREQUAL "TRIBITS_ETI_BAD_PARSE")
@@ -198,9 +261,11 @@ FUNCTION(TRIBITS_ETI_GENERATE_MACROS etifields etisetvar etiexcludelist mangling
     ELSE()
       SET(inst "${tmp}")
     ENDIF()
+    # check whether it is on the exclude list
     TRIBITS_ETI_CHECK_EXCLUSION("${processed_excludes}" "${inst}" excluded)
     IF(NOT excluded)
       SPLIT("${inst}" "\\|" inst)
+      # append tuple to list
       FOREACH(m RANGE 1 ${num_macros})
         SET(tuple "")
         FOREACH(ind ${macroindex${m}})
@@ -209,6 +274,7 @@ FUNCTION(TRIBITS_ETI_GENERATE_MACROS etifields etisetvar etiexcludelist mangling
             SET(tuple "SKIP-TUPLE")
             BREAK()
           ENDIF()
+          # mangle the types in the instantiation
           TRIBITS_ETI_MANGLE_SYMBOL_AUGMENT_MACRO(typedeflist t manglinglist)
           LIST(APPEND tuple ${t})
         ENDFOREACH()
@@ -219,19 +285,23 @@ FUNCTION(TRIBITS_ETI_GENERATE_MACROS etifields etisetvar etiexcludelist mangling
       ENDFOREACH()
     ENDIF()
   ENDFOREACH()
+  # remove duplicates from lists
   FOREACH(m RANGE 1 ${num_macros})
     IF(DEFINED macrotuples${m})
       LIST(REMOVE_DUPLICATES macrotuples${m})
     ENDIF()
   ENDFOREACH()
+  # build the macro strings
   FOREACH(m RANGE 1 ${num_macros})
     TRIBITS_ETI_BUILD_MACRO_STRING("${macroname${m}}" "${macrotuples${m}}" mac)
     SET(${macrovar${m}} "${mac}" PARENT_SCOPE)
   ENDFOREACH()
+  # build the typedef string
   SET(${manglinglistvar} ${manglinglist} PARENT_SCOPE)
   SET(${typedeflistvar}  ${typedeflist}  PARENT_SCOPE)
 ENDFUNCTION()
 
+# generate the typedef macro
 FUNCTION(TRIBITS_ETI_GENERATE_TYPEDEF_MACRO outputvar macroname typedeflist)
   SET(mac "#define ${macroname}() ")
   FOREACH(td ${typedeflist})

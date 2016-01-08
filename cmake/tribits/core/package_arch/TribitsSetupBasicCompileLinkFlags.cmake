@@ -1,11 +1,56 @@
+# @HEADER
+# ************************************************************************
+#
+#            TriBITS: Tribal Build, Integrate, and Test System
+#                    Copyright 2013 Sandia Corporation
+#
+# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+# the U.S. Government retains certain rights in this software.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the Corporation nor the names of the
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# ************************************************************************
+# @HEADER
 
 INCLUDE(TribitsDefineStandardCompileVars)
 INCLUDE(DualScopePrependCmndlineArgs)
 
+#
+# Helper macros
+#
 
 MACRO(TRIBITS_SET_LANGUAGE_BUILDTYPE_FLAGS LANG BUILDTYPE)
 
+  #PRINT_VAR(CMAKE_${LANG}_FLAGS_${BUILDTYPE})
+  #PRINT_VAR(GENERAL_${BUILDTYPE}_FLAGS)
 
+  # Set the default CMAKE_${LANG}_FLAGS_${BUILDTYPE} to empty to override the
+  # default that CMake gives!  We want to define these for ourselves.
   SET(CMAKE_${LANG}_FLAGS_${BUILDTYPE} "")
 
   IF (GENERAL_${BUILDTYPE}_FLAGS)
@@ -43,6 +88,9 @@ MACRO(TRIBITS_SET_LANGUAGE_BUILDTYPE_FLAGS_OVERRIDE LANG BUILDTYPE)
     ENDIF()
   ENDIF()
 
+  # NOTE: Above, we can't just let users set CMAKE_${LANG}_FLAGS_${BUILDTYPE}
+  # in the cache because CMake overrides it.  We have ot add this override
+  # option to allow them to override it.
 
 ENDMACRO()
 
@@ -79,12 +127,29 @@ MACRO(TRIBITS_SET_LANGUAGE_COVERAGE_FLAGS LANG)
 ENDMACRO()
 
 
+#
+# Function that sets up strong compile options for the primary
+# development platform (i.e. gcc)
+#
+# NOTE: The compiler flags in the cache, which may have been set by
+# the user, are not disturbed in this function.  Instead variables in
+# the parent base scope are set.
+#
+# NOTE: This function should be called only once before adding any libraries,
+# executables, etc.
+#
 
 FUNCTION(TRIBITS_SETUP_BASIC_COMPILE_LINK_FLAGS)
 
+  #
+  # Setup and general flags
+  #
 
   TRIBITS_DEFINE_STANDARD_COMPILE_FLAGS_VARS(FALSE)
 
+  #
+  # Set up coverge testing options
+  #
 
   IF (${PROJECT_NAME}_ENABLE_COVERAGE_TESTING)
     SET(COVERAGE_OPTIONS "-fprofile-arcs -ftest-coverage")
@@ -92,6 +157,9 @@ FUNCTION(TRIBITS_SETUP_BASIC_COMPILE_LINK_FLAGS)
     SET(COVERAGE_OPTIONS "")
   ENDIF()
 
+  #
+  # C compiler options
+  #
 
   ASSERT_DEFINED(${PROJECT_NAME}_ENABLE_C CMAKE_C_COMPILER_ID)
   IF (${PROJECT_NAME}_ENABLE_C AND CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -102,6 +170,9 @@ FUNCTION(TRIBITS_SETUP_BASIC_COMPILE_LINK_FLAGS)
   ENDIF()
   TRIBITS_SET_LANGUAGE_ALL_BUILDTYPES_FLAGS_OVERRIDE(C)
 
+  #
+  # C++ compiler options
+  #
 
   ASSERT_DEFINED(${PROJECT_NAME}_ENABLE_CXX CMAKE_CXX_COMPILER_ID)
   IF (${PROJECT_NAME}_ENABLE_CXX AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -112,6 +183,9 @@ FUNCTION(TRIBITS_SETUP_BASIC_COMPILE_LINK_FLAGS)
   ENDIF()
   TRIBITS_SET_LANGUAGE_ALL_BUILDTYPES_FLAGS_OVERRIDE(CXX)
 
+  #
+  # Fortran compiler options
+  #
 
   ASSERT_DEFINED(${PROJECT_NAME}_ENABLE_Fortran)
   IF (${PROJECT_NAME}_ENABLE_Fortran AND CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
@@ -120,6 +194,9 @@ FUNCTION(TRIBITS_SETUP_BASIC_COMPILE_LINK_FLAGS)
   ENDIF()
   TRIBITS_SET_LANGUAGE_ALL_BUILDTYPES_FLAGS_OVERRIDE(Fortran)
 
+  #
+  # Linker options
+  #
 
   ASSERT_DEFINED(${PROJECT_NAME}_ENABLE_COVERAGE_TESTING COVERAGE_OPTIONS)
   IF (${PROJECT_NAME}_ENABLE_COVERAGE_TESTING AND COVERAGE_OPTIONS)

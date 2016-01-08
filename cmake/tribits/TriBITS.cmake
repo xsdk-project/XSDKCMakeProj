@@ -1,3 +1,13 @@
+#
+# Top-level include file that pulls in TriBITS so it can be used by a project.
+# A Project's top-level CMakeLists.cmake file just does:
+#
+#   INCLUDE(${${PROJECT_NAME}_TRIBITS_DIR}/TriBITS.cmake)
+#
+# and then they can call:
+#
+#    TRIBITS_PROJECT()
+#
 
 IF (${PROJECT_NAME}_TRIBITS_DIR)
   SET(TRIBITS_BASE_DIR_LOCAL "${${PROJECT_NAME}_TRIBITS_DIR}")

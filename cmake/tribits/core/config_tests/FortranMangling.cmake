@@ -1,6 +1,70 @@
+# @HEADER
+# ************************************************************************
+#
+#            TriBITS: Tribal Build, Integrate, and Test System
+#                    Copyright 2013 Sandia Corporation
+#
+# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+# the U.S. Government retains certain rights in this software.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the Corporation nor the names of the
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# ************************************************************************
+# @HEADER
 
 INCLUDE(GlobalSet)
 
+# Function that defines variables describing the Fortran name mangling
+# convention
+#
+# Sets the following outputs on success:
+#
+#  FC_FN_CASE
+#    "UPPER" if names are translated to upper-case,
+#    "LOWER" otherwise.
+#
+#  FC_FN_UNDERSCORE
+#    "NO_UNDER" if nothing is appended, "UNDER" if
+#    one underscore is appended, and "SECOND_UNDER"
+#    if a function with an underscore has a second
+#    appended.
+#
+# FC_FUNC_DEFAULT
+#    The default mange mangling for Fortran functions
+#    that do not contain an underscore.
+#
+# FC_FUNC__DEFAULT
+#    The default mange mangling for Fortran functions
+#    that do contain an underscore.
+#
+#  The Fortran 2003 name binding facilities and ISO_C_BINDING module
+#  should be preferred over cpp macro trickery whenever possible.
+#
 FUNCTION(FORTRAN_MANGLING)
 
   IF(NOT DEFINED FC_FN_CASE)
@@ -94,4 +158,92 @@ FUNCTION(FORTRAN_MANGLING)
 ENDFUNCTION()
 
 
+# 2008/10/26: rabartl: Below, these were macros that were also present in the
+# file that I got off of the web but I did not need them so they are disabled
+# (for now)
 
+## - Guess if the Fortran compiler returns REAL in C doubles.
+##  FORTRAN_FLOATRET()
+##
+## If the Fortran compiler follows the f2c convention of
+## returning REALs in C doubles, routines like SLAMCH can
+## cause very difficult to find stack corruptions.  This
+## test is not perfect; it just checks if C->Fortran->C
+## twice in a row does not crash.  If the tests do crash,
+## FC_FN_FLOATRET is set to a true value, otherwise it
+## is set to a false value.
+##
+## The REAL kinds in Fortran 2003's ISO_C_BINDING module should
+## be used instead of this test whenever possible.
+##
+#MACRO(FORTRAN_FLOATRET)
+#  IF(NOT DEFINED FC_FN_FLOATRET)
+#    # Find inputs
+#    FIND_FILE(_fcindir floatret/ ${CMAKE_MODULE_PATH})
+#    SET(_fcdir ${PROJECT_BINARY_DIR}/CMakeFiles/CMakeTmp/floatret)
+#    FILE(MAKE_DIRECTORY ${_fcdir})
+#    TRY_COMPILE(_fccrv ${_fcdir} ${_fcindir} floatret
+#      CMAKE_FLAGS "-DFC_FN_DEFS:STRING=${FC_FN_DEFS}")
+#    IF(_fccrv)
+#      EXECUTE_PROCESS(COMMAND ${_fcdir}/ctst
+#        WORKING_DIRECTORY ${_fcdir}
+#        RESULT_VARIABLE _fcrrv)
+#    ENDIF(_fccrv)
+#    IF(_fcrrv EQUAL 0)
+#      SET(_fc_fn_floatret 0)
+#    ELSE(_fcrrv EQUAL 0)
+#      SET(_fc_fn_floatret 1)
+#    ENDIF(_fcrrv EQUAL 0)
+#    SET(FC_FN_FLOATRET ${_fc_fn_floatret} CACHE BOOL
+#      "Fortran returns REAL in double.")
+#    MESSAGE(STATUS "Fortran returns REAL in double: ${FC_FN_FLOATRET}")
+#  ENDIF(NOT DEFINED FC_FN_FLOATRET)
+#ENDMACRO()
+#
+#
+## - Guess the convention for passing strings from C to Fortran.
+##  FORTRAN_STRINGARG()
+##
+## If string lengths are directly appended to each variable, e.g.
+## CALL FOO('bar', 1.0) becomes foo({'b','a','r'}, 3, 1.0), then
+## FC_FN_STRINGARG is set to PAIRED.  If the lengths are appended
+## to the call, e.g. foo({'b','a','r'}, 1.0, 3), FC_FN_STRINGARG
+## is set to TRAILING.
+##
+## This macro does not currently check for older Cray and VMS
+## conventions that require conversion functions.  It also assumes
+## that the length is passed as the "natural" size type, C's size_t.
+##
+## The string kinds in Fortran 2003's ISO_C_BINDING module should
+## be used instead of these conventions whenever possible.
+##
+#SET(FC_FN_STRINGARG_TYPES "PAIRED" "TRAILING")
+#MACRO(FORTRAN_STRINGARG)
+#  IF(NOT DEFINED FC_FN_STRINGARG)
+#    # Find inputs
+#    FIND_FILE(_fcstrindir fstrings/ ${CMAKE_MODULE_PATH})
+#    SET(_fcstrdir ${PROJECT_BINARY_DIR}/CMakeFiles/CMakeTmp/fstrings)
+#    FOREACH(argtype ${FC_FN_STRINGARG_TYPES})
+#      FILE(MAKE_DIRECTORY ${_fcstrdir})
+#      TRY_COMPILE(_fcstrcrv ${_fcstrdir} ${_fcstrindir} fstrings
+#        CMAKE_FLAGS "-DFC_FN_DEFS:STRING=${FC_FN_DEFS}" "-Dargtype:STRING=${argtype}")
+#      IF(_fcstrcrv)
+#        EXECUTE_PROCESS(COMMAND ${_fcstrdir}/ccheck
+#          WORKING_DIRECTORY ${_fcstrdir}
+#          RESULT_VARIABLE _fcstrrrv)
+#        IF(_fcstrrrv EQUAL 0)
+#          SET(_fcstr ${argtype})
+#          BREAK()
+#        ENDIF(_fcstrrrv EQUAL 0)
+#      ENDIF(_fcstrcrv)
+#      FILE(REMOVE_RECURSE ${_fcstrdir})
+#    ENDFOREACH(argtype)
+#    IF(DEFINED _fcstr)
+#      SET(FC_FN_STRINGARG ${_fcstr} CACHE STRING
+#        "How Fortran accepts string arguments.")
+#      MESSAGE(STATUS "Fortran string passing: ${FC_FN_STRINGARG}")
+#    ELSE(DEFINED _fcstr)
+#      MESSAGE(STATUS "Cannot determine Fortran string passing.")
+#    ENDIF(DEFINED _fcstr)
+#  ENDIF(NOT DEFINED FC_FN_STRINGARG)
+#ENDMACRO()

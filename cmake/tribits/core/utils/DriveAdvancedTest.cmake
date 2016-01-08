@@ -1,8 +1,47 @@
+# @HEADER
+# ************************************************************************
+#
+#            TriBITS: Tribal Build, Integrate, and Test System
+#                    Copyright 2013 Sandia Corporation
+#
+# Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+# the U.S. Government retains certain rights in this software.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the Corporation nor the names of the
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# ************************************************************************
+# @HEADER
 
 INCLUDE(PrintVar)
 INCLUDE(AppendStringVar)
 INCLUDE(Join)
 INCLUDE(TimingUtils)
+INCLUDE(TribitsGetCategoriesString)
 
 
 FUNCTION(PRINT_CURRENT_DATE_TIME  PREFIX_STR)
@@ -19,18 +58,20 @@ FUNCTION(PRINT_UPTIME  PREFIX_STR)
 ENDFUNCTION()
 
 
-FUNCTION(DELETE_CREATE_WORKING_DIRECTORY  WORKING_DIR_IN)
-  IF (EXISTS "${WORKING_DIR_IN}")
+FUNCTION(DELETE_CREATE_WORKING_DIRECTORY  WORKING_DIR_IN   SKIP_CLEAN)
+  IF (EXISTS "${WORKING_DIR_IN}" AND NOT SKIP_CLEAN)
     MESSAGE("Removing existing working directory"
       " '${WORKING_DIR_IN}'\n")
     IF (NOT SHOW_COMMANDS_ONLY)
       FILE(REMOVE_RECURSE "${WORKING_DIR_IN}")
     ENDIF()
   ENDIF()
-  MESSAGE("Creating new working directory"
-    " '${WORKING_DIR_IN}'\n")
-  IF (NOT SHOW_COMMANDS_ONLY)
-    FILE(MAKE_DIRECTORY "${WORKING_DIR_IN}")
+  IF (NOT EXISTS "${WORKING_DIR_IN}")
+    MESSAGE("Creating new working directory"
+      " '${WORKING_DIR_IN}'\n")
+    IF (NOT SHOW_COMMANDS_ONLY)
+      FILE(MAKE_DIRECTORY "${WORKING_DIR_IN}")
+    ENDIF()
   ENDIF()
 ENDFUNCTION()
 
@@ -51,7 +92,9 @@ FUNCTION(DRIVE_ADVANCED_TEST)
   MESSAGE("\n${ADVANDED_TEST_SEP}\n")
   MESSAGE("Advanced Test: ${TEST_NAME}\n")
 
-  MESSAGE("Selected CTest Propeties:")
+  MESSAGE("Selected Test/CTest Propeties:")
+  TRIBITS_GET_CATEGORIES_STRING("${CATEGORIES}" CATEGORIES_IN_COMMAS)
+  MESSAGE("  CATEGORIES = ${CATEGORIES_IN_COMMAS}")
   MESSAGE("  PROCESSORS = ${PROCESSORS}")
   IF (TIMEOUT)
     MESSAGE("  TIMEOUT    = ${TIMEOUT}\n")
@@ -68,10 +111,11 @@ FUNCTION(DRIVE_ADVANCED_TEST)
   ENDIF()
 
   IF (OVERALL_WORKING_DIRECTORY)
-    IF (NOT IS_ABSOLUTE OVERALL_WORKING_DIRECTORY)
+    IF (NOT  IS_ABSOLUTE  "${OVERALL_WORKING_DIRECTORY}")
       SET(OVERALL_WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${OVERALL_WORKING_DIRECTORY})
     ENDIF()
-    DELETE_CREATE_WORKING_DIRECTORY("${OVERALL_WORKING_DIRECTORY}")
+    DELETE_CREATE_WORKING_DIRECTORY("${OVERALL_WORKING_DIRECTORY}"
+      ${SKIP_CLEAN_OVERALL_WORKING_DIRECTORY})
     SET(BASE_WORKING_DIRECTORY "${OVERALL_WORKING_DIRECTORY}")
   ELSE()
     SET(BASE_WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
@@ -102,11 +146,12 @@ FUNCTION(DRIVE_ADVANCED_TEST)
     ENDIF()
 
     IF (TEST_${CMND_IDX}_WORKING_DIRECTORY)
-      IF (NOT IS_ABSOLUTE TEST_${CMND_IDX}_WORKING_DIRECTORY)
+      IF (NOT  IS_ABSOLUTE  "${TEST_${CMND_IDX}_WORKING_DIRECTORY}")
         SET(TEST_${CMND_IDX}_WORKING_DIRECTORY
           ${BASE_WORKING_DIRECTORY}/${TEST_${CMND_IDX}_WORKING_DIRECTORY})
       ENDIF()
-      DELETE_CREATE_WORKING_DIRECTORY("${TEST_${CMND_IDX}_WORKING_DIRECTORY}")
+      DELETE_CREATE_WORKING_DIRECTORY("${TEST_${CMND_IDX}_WORKING_DIRECTORY}"
+        ${TEST_${CMND_IDX}_SKIP_CLEAN_WORKING_DIRECTORY})
     ENDIF()
 
     JOIN( TEST_CMND_STR " " TRUE ${TEST_${CMND_IDX}_CMND} )
@@ -132,7 +177,7 @@ FUNCTION(DRIVE_ADVANCED_TEST)
       )
 
     IF (TEST_${CMND_IDX}_OUTPUT_FILE)
-      IF (NOT IS_ABSOLUTE ${TEST_${CMND_IDX}_OUTPUT_FILE})
+      IF (NOT  IS_ABSOLUTE  "${TEST_${CMND_IDX}_OUTPUT_FILE}")
         SET(OUTPUT_FILE_USED "${WORKING_DIR}/${TEST_${CMND_IDX}_OUTPUT_FILE}")
       ELSE()
         SET(OUTPUT_FILE_USED "${TEST_${CMND_IDX}_OUTPUT_FILE}")
@@ -142,6 +187,7 @@ FUNCTION(DRIVE_ADVANCED_TEST)
 
     IF (NOT SHOW_COMMANDS_ONLY)
 
+      # Provide the test configuration in an environment variable.
       IF(TEST_CONFIG)
         SET(ENV{TEST_CONFIG} "${TEST_CONFIG}")
       ENDIF(TEST_CONFIG)
