@@ -98,10 +98,6 @@ ENDFUNCTION()
 # Define a function to do a test using TRIBITS_ADD_ADVANCED_TEST()
 #
 
-# Set some vars so we can use it!
-SET(${PROJECT_NAME}_TEST_CATEGORIES BASIC)
-SET(${PROJECT_NAME}_HOSTNAME dummy)
-
 INCLUDE(TribitsAddAdvancedTest)
 
 FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
