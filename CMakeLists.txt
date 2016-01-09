@@ -7,17 +7,33 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 
 SET(PROJECT_NAME XSDKCMakeProj)
-PROJECT(${PROJECT_NAME}  CXX)
+
+SET(CMAKE_DEFAULT_C_COMPILER_NAME  gcc  CACHE  STRING
+  "Default name of the C compiler so that CMake does not find 'cc' by default!")
+SET(CMAKE_C_COMPILER  gcc)
+
+PROJECT(${PROJECT_NAME}  C  CXX  Fortran)
+
+SET(C_COMPILER_1  "/usr/bin/cc"  CACHE FILEPATH
+  "First valid C compiler to test with" )
+SET(C_COMPILER_2  "/usr/bin/gcc"  CACHE FILEPATH
+  "Second valid C compiler to test with" )
+SET(C_DEFAULT_COMPILER  "${CMAKE_C_COMPILER}")
 
 SET(CXX_COMPILER_1  "/usr/bin/c++"  CACHE FILEPATH
-  "One valid C++ compiler to test with" )
+  "First valid C++ compiler to test with" )
 SET(CXX_COMPILER_2  "/usr/bin/g++"  CACHE FILEPATH
   "Second valid C++ compiler to test with" )
-# This is the compiler that CMake finds by default
-SET(CXX_DEFAUT_COMPILER  "${CMAKE_CXX_COMPILER}")
+SET(CXX_DEFAULT_COMPILER  "${CMAKE_CXX_COMPILER}")
+
+SET(Fortran_COMPILER_1  "/usr/bin/f95"  CACHE FILEPATH
+  "First valid Fortran compiler to test with" )
+SET(Fortran_COMPILER_2  "/usr/bin/gfortran"  CACHE FILEPATH
+  "Second valid Fortran compiler to test with" )
+SET(Fortran_DEFAULT_COMPILER  "${CMAKE_Fortran_COMPILER}")
 
 # Pull in TriBITS so we can use TRIBITS_ADD_ADVANCED_TEST() and some other
-# functions (but this is *not* a TriBITS project.
+# functions (but this is *not* a TriBITS project).
 SET(${PROJECT_NAME}_TRIBITS_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/tribits"
  CACHE  PATH  "Set in CMakeLists.txt" )
 INCLUDE("${${PROJECT_NAME}_TRIBITS_DIR}/TriBITS.cmake")
@@ -30,38 +46,54 @@ ENABLE_TESTING()
 # Print compilers
 #
 
+PRINT_VAR(C_COMPILER_1)
+PRINT_VAR(C_COMPILER_2)
+PRINT_VAR(C_DEFAULT_COMPILER)
+
 PRINT_VAR(CXX_COMPILER_1)
 PRINT_VAR(CXX_COMPILER_2)
-PRINT_VAR(CXX_DEFAUT_COMPILER)
+PRINT_VAR(CXX_DEFAULT_COMPILER)
+
+PRINT_VAR(Fortran_COMPILER_1)
+PRINT_VAR(Fortran_COMPILER_2)
+PRINT_VAR(Fortran_DEFAULT_COMPILER)
 
 
 #
 # Check compiler vars
 #
 
-IF (CXX_COMPILER_1  STREQUAL  "")
-  MESSAGE(FATAL_ERROR "ERROR: Must set CXX_COMPILER_1!")
-ENDIF()
+FUNCTION(CHECK_LANG_COMPILER_DEFAULTS  LANG)
 
-IF (CXX_COMPILER_2  STREQUAL  "")
-  MESSAGE(FATAL_ERROR "ERROR: Must set CXX_COMPILER_2!")
-ENDIF()
+  IF (${LANG}_COMPILER_1  STREQUAL  "")
+    MESSAGE(FATAL_ERROR "ERROR: Must set ${LANG}_COMPILER_1!")
+  ENDIF()
+  
+  IF (${LANG}_COMPILER_2  STREQUAL  "")
+    MESSAGE(FATAL_ERROR "ERROR: Must set ${LANG}_COMPILER_2!")
+  ENDIF()
+  
+  IF (${LANG}_DEFAULT_COMPILER  STREQUAL  "")
+    MESSAGE(FATAL_ERROR "ERROR: A default compiler must be find!")
+  ENDIF()
+  
+  IF (${LANG}_COMPILER_1  STREQUAL  ${LANG}_COMPILER_2)
+    MESSAGE(FATAL_ERROR "ERROR: ${LANG}_COMPILER_1 and ${LANG}_COMPILER_2 must be different!")
+  ENDIF()
+  
+  IF (${LANG}_COMPILER_1  STREQUAL  ${LANG}_DEFAULT_COMPILER)
+    MESSAGE(FATAL_ERROR "ERROR: ${LANG}_COMPILER_1 and ${LANG}_DEFAULT_COMPILER must be different!")
+  ENDIF()
+  
+  IF (${LANG}_COMPILER_2  STREQUAL  ${LANG}_DEFAULT_COMPILER)
+    MESSAGE(FATAL_ERROR "ERROR: ${LANG}_COMPILER_2 and ${LANG}_DEFAULT_COMPILER must be different!")
+  ENDIF()
 
-IF (CXX_DEFAUT_COMPILER  STREQUAL  "")
-  MESSAGE(FATAL_ERROR "ERROR: A default compiler must be find!")
-ENDIF()
+ENDFUNCTION()
 
-IF (CXX_COMPILER_1  STREQUAL  CXX_COMPILER_2)
-  MESSAGE(FATAL_ERROR "ERROR: CXX_COMPILER_1 and CXX_COMPILER_2 must be different!")
-ENDIF()
-
-IF (CXX_COMPILER_1  STREQUAL  CXX_DEFAUT_COMPILER)
-  MESSAGE(FATAL_ERROR "ERROR: CXX_COMPILER_1 and CXX_DEFAUT_COMPILER must be different!")
-ENDIF()
-
-IF (CXX_COMPILER_2  STREQUAL  CXX_DEFAUT_COMPILER)
-  MESSAGE(FATAL_ERROR "ERROR: CXX_COMPILER_2 and CXX_DEFAUT_COMPILER must be different!")
-ENDIF()
+CHECK_LANG_COMPILER_DEFAULTS(C)
+CHECK_LANG_COMPILER_DEFAULTS(CXX)
+CHECK_LANG_COMPILER_DEFAULTS(Fortran)
 
 
 #
@@ -141,24 +173,40 @@ ENDFUNCTION()
 
 
 #
-# Test cases NoUseXsdkDefaults_NoUseCompilerEnvVars
+# Test cases NoUseXsdkDefaults
 # 
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_none
   FALSE
   ""  ""
   ""  ""
+  "Before XSDK: CMAKE_C_COMPILER = ''"
+  "Before XSDK: CMAKE_C_FLAGS = ''"
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
   "Before XSDK: CMAKE_CXX_FLAGS = ''"
+  "Before XSDK: CMAKE_Fortran_COMPILER = ''"
+  "Before XSDK: CMAKE_Fortran_FLAGS = ''"
   "Before XSDK: BUILD_SHARED_LIBS = ''"
   "Before XSDK: CMAKE_BUILD_TYPE = ''"
-  "USE_XSDK_DEFAULTS = 'FALSE'"
+  "Before XSDK: CMAKE_C_COMPILER = ''"
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
+  "Before XSDK: CMAKE_Fortran_COMPILER = ''"
+  "USE_XSDK_DEFAULTS = 'FALSE'"
+  "Before EL: CMAKE_C_COMPILER = ''"
+  "Before EL: CMAKE_C_FLAGS = ''"
+  "Before EL: CMAKE_CXX_COMPILER = ''"
   "Before EL: CMAKE_CXX_FLAGS = ''"
+  "Before EL: CMAKE_Fortran_COMPILER = ''"
+  "Before EL: CMAKE_Fortran_FLAGS = ''"
   "Before EL: BUILD_SHARED_LIBS = ''"
   "Before EL: CMAKE_BUILD_TYPE = ''"
-  "After EL: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  "Setting CMAKE_C_COMPILER=gcc so that CMake finds the default"
+  "After EL: CMAKE_C_COMPILER = '${C_DEFAULT_COMPILER}'"
+  "After EL: CMAKE_C_FLAGS = ''"
+  "After EL: CMAKE_CXX_COMPILER = '${CXX_DEFAULT_COMPILER}'"
   "After EL: CMAKE_CXX_FLAGS = ''"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_DEFAULT_COMPILER}'"
+  "After EL: CMAKE_Fortran_FLAGS = ''"
   "After EL: BUILD_SHARED_LIBS = ''"
   "After EL: CMAKE_BUILD_TYPE = ''"
   )
@@ -201,10 +249,10 @@ ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cxx1_cxx2
 
 
 #
-# Test cases UseXsdkDefaults_UseCompilerEnvVars
+# Test cases UseXsdkDefaults
 # 
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_none
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_none
   TRUE
   ""  ""
   ""  ""
@@ -218,10 +266,10 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_none
   "Before EL: CMAKE_CXX_COMPILER = ''"
   "Before EL: BUILD_SHARED_LIBS = 'TRUE'"
   "Before EL: CMAKE_BUILD_TYPE = 'DEBUG'"
-  "After EL: CMAKE_CXX_COMPILER = '${CXX_DEFAUT_COMPILER}'"
+  "After EL: CMAKE_CXX_COMPILER = '${CXX_DEFAULT_COMPILER}'"
   )
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_none
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_cxx1_none
   TRUE
   "${CXX_COMPILER_1}"  "-Wall"
   ""  ""
@@ -235,7 +283,7 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_none
   "After EL: CMAKE_CXX_FLAGS = '-Wall '"
   )
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_cxx2
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_cxx2
   TRUE
   ""  ""
   "${CXX_COMPILER_2}"  "-Wlong-long"
@@ -247,7 +295,7 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_none_cxx2
   "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_UseCompilerEnvVars_cxx1_cxx2
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_cxx1_cxx2
   TRUE
   "${CXX_COMPILER_1}"  "-Wall"
   "${CXX_COMPILER_2}"  "-Wlong-long"
