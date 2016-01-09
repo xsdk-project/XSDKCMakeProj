@@ -5,27 +5,61 @@
 ##################################################################################
 
 #
-# This module implements standard behavior for XSDK CMake projects.  It
-# changes the default behavior of CMake on a few fronts.  The main thing it
-# does by default in XSDK mode is to ignore compiler vars in the env if they
-# are set using CC, CXX, FC and compiler flags CFLAGS, CXXFLAGS, and FFLAGS.
+# This module implements standard behavior for XSDK CMake projects.  The main
+# thing it does in XSDK mode (i.e. USE_XSDK_DEFAULTS=TRUE) is to print out
+# when the env vars CC, CXX, FC and compiler flags CFLAGS, CXXFLAGS, and
+# FFLAGS are used to select the compilers and compiler flags (raw CMake does
+# this silently) and to set BUILD_SHARED_LIBS=TRUE and CMAKE_BUILD_TYPE=DEBUG
+# by default.  It does not implement *all* of the standard XSDK configuration
+# parameters.  The parent CMake project must do that.
 #
-# This module must be included after
+# To be used in a parent project, this module must be included after
 #
 #   PROJECT(${PROJECT_NAME}  NONE)
 #
 # is called but before the compilers are defined and processed using:
 #
-#   ENABLE_LANGAUGE(<LANG>)
+#   ENABLE_LANGUAGE(<LANG>)
 #
-# The major downside of this specification is that when USE_XSDK_DEFAULTS=TRUE
-# but XSDK_USE_COMPILER_ENV_VARS=FALSE, then the default compilers must be
-# searched for here instead of inside of ENABLE_LANGAUGE(<LANG>) .  This is
-# because if you go into ENABLE_LANGAUGE(<LANG>) then CMake will set the
-# default compilers by reading the env vars.  If you don't like the default
-# compilers picked by this module, set XSDK_USE_COMPILER_ENV_VARS=TRUE (which
-# is the CMake default anyway).
-# 
+# For example, one would do:
+#
+#   PROJECT(${PROJECT_NAME}  NONE)
+#   ...
+#   SET(USE_XSDK_DEFAULTS_DEFAULT TRUE) # Set to false if desired
+#   INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/stdk/XSDKDefaults.cmake")
+#   ...
+#   ENABLE_LANGUAGE(C)
+#   ENABLE_LANGUAGE(C++)
+#   ENABLE_LANGUAGE(Fortran)
+#
+# The variable `USE_XSDK_DEFAULTS_DEFAULT` is used as the default for the
+# cache var `USE_XSDK_DEFAULTS`.  That way, a project can decide if it wants
+# XSDK defaults turned on or off by default and users can independently decide
+# if they want the CMake project to use standard XSDK behavior or raw CMake
+# behavior.
+#
+# By default, the XSDKDefaults.cmake module assumes that the project will need
+# C, C++, and Fortran.  If any language is not needed then, set
+# XSDK_ENABLE_C=OFF, XSDK_ENABLE_CXX=OFF, or XSDK_ENABLE_Fortran=OFF *before*
+# including this module.  Note, these variables are *not* cache vars because a
+# project either does or does not have C, C++ or Fortran source files, the
+# user has nothing to do with this so there is no need for cache vars.  The
+# parent CMake project just needs to tell XSDKDefault.cmake what languages is
+# needs or does not need.
+#
+# For example, if the parent CMake project only needs C, then it would do:
+#
+#   PROJECT(${PROJECT_NAME}  NONE)'
+#   ...
+#   SET(USE_XSDK_DEFAULTS_DEFAULT TRUE)
+#   SET(XSDK_ENABLE_CXX OFF)
+#   SET(XSDK_ENABLE_Fortran OFF)
+#   INCLUDE("${CMAKE_CURRENT_SOURCE_DIR}/stdk/XSDKDefaults.cmake")
+#   ...
+#   ENABLE_LANGAUGE(C)
+#
+# This module code will announce when it sets any variables.
+#
 
 #
 # Helper functions
@@ -37,7 +71,31 @@ IF (NOT COMMAND PRINT_VAR)
   ENDFUNCTION()
 ENDIF()
 
+IF (NOT COMMAND SET_DEFAULT)
+  MACRO(SET_DEFAULT VAR)
+    IF ("${${VAR}}" STREQUAL "")
+      SET(${VAR} ${ARGN})
+    ENDIF()
+  ENDMACRO()
+ENDIF()
 
+#
+# XSDKDefaults.cmake control variables
+#
+
+# USE_XSDK_DEFAULTS
+IF ("${USE_XSDK_DEFAULTS_DEFAULT}" STREQUAL "")
+  SET(USE_XSDK_DEFAULTS_DEFAULT  FALSE)
+ENDIF()
+SET(USE_XSDK_DEFAULTS  ${USE_XSDK_DEFAULTS_DEFAULT}  CACHE  BOOL
+  "Use XSDK defaults and behavior.")
+PRINT_VAR(USE_XSDK_DEFAULTS)
+
+SET_DEFAULT(XSDK_ENABLE_C  TRUE)
+SET_DEFAULT(XSDK_ENABLE_CXX  TRUE)
+SET_DEFAULT(XSDK_ENABLE_Fortran  TRUE)
+
+# Handle the compiler and flags for a language
 MACRO(XSDK_HANDLE_LANG_DEFAULTS  CMAKE_LANG_NAME  ENV_LANG_NAME
   ENV_LANG_FLAGS_NAME
   )
@@ -71,30 +129,10 @@ ENDMACRO()
 # Set XSDK Defaults
 #
 
-# USE_XSDK_DEFAULTS
-IF ("${USE_XSDK_DEFAULTS_DEFAULT}" STREQUAL "")
-  SET(USE_XSDK_DEFAULTS_DEFAULT  FALSE)
-ENDIF()
-SET(USE_XSDK_DEFAULTS  ${USE_XSDK_DEFAULTS_DEFAULT}  CACHE  BOOL
-  "Use XSDK defaults and behavior.")
-PRINT_VAR(USE_XSDK_DEFAULTS)
-
-# XSDK_ENABLE_C
-SET(XSDK_ENABLE_C  TRUE  CACHE BOOL
-  "Handle compiler and options for C")
-
-# XSDK_ENABLE_CXX
-SET(XSDK_ENABLE_CXX  TRUE  CACHE BOOL
-  "Handle compiler and options for C++")
-
-# XSDK_ENABLE_Fortran
-SET(XSDK_ENABLE_Fortran  TRUE  CACHE BOOL
-  "Handle compiler and options for Fortran")
-
 # Set default compilers and flags
 IF (USE_XSDK_DEFAULTS)
 
-  # Handle env vars for lanaguages C, C++, and Fortran
+  # Handle env vars for languages C, C++, and Fortran
 
   IF (XSDK_ENABLE_C)
     XSDK_HANDLE_LANG_DEFAULTS(C  CC  CFLAGS)
@@ -111,12 +149,12 @@ IF (USE_XSDK_DEFAULTS)
   # Set XSDK defaults for other CMake variables
   
   IF ("${BUILD_SHARED_LIBS}"  STREQUAL  "")
-    MESSAGE("XSDK: Setting default for BUILD_SHARED_LIBS to TRUE!")
+    MESSAGE("XSDK: Setting default BUILD_SHARED_LIBS=TRUE")
     SET(BUILD_SHARED_LIBS  TRUE  CACHE  BOOL  "Set by default in XSDK mode")
   ENDIF()
   
   IF ("${CMAKE_BUILD_TYPE}"  STREQUAL  "")
-    MESSAGE("XSDK: Setting default for CMAKE_BUILD_TYPE to DEBUG!")
+    MESSAGE("XSDK: Setting default CMAKE_BUILD_TYPE=DEBUG")
     SET(CMAKE_BUILD_TYPE  DEBUG  CACHE  STRING  "Set by default in XSDK mode")
   ENDIF()
 

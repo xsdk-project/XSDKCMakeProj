@@ -239,8 +239,10 @@ ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_none
   "After EL: BUILD_SHARED_LIBS = ''"
   "After EL: CMAKE_BUILD_TYPE = ''"
   )
+  # Above just demonsgrates what the raw behavior of CMake when no CMake vars
+  # and not env vars are passed in.
 
-ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cmake1_none
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_env1_none
   FALSE
   "${C_COMPILER_1}"  "-O0"
   ""  ""
@@ -267,39 +269,66 @@ ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cmake1_none
   "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_1}'"
   "After EL: CMAKE_Fortran_FLAGS = '-O2 '"
   )
+  # Above shows the raw CMake does indeed read the env vars as one would hope.
 
-ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_env2
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_cmake2
   FALSE
   ""  ""
+  "${C_COMPILER_2}"  "-O0"
   ""  ""
+  "${CXX_COMPILER_2}"  "-O1"
   ""  ""
-  "${CXX_COMPILER_2}"  "-Wlong-long"
-  ""  ""
-  ""  ""
+  "${Fortran_COMPILER_2}"  "-O2"
+  "Before XSDK: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before XSDK: CMAKE_C_FLAGS = '-O0'"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-O1'"
+  "Before XSDK: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before XSDK: CMAKE_Fortran_FLAGS = '-O2'"
+  "Before EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before EL: CMAKE_C_FLAGS = '-O0'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before EL: CMAKE_CXX_FLAGS = '-O1'"
+  "Before EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before EL: CMAKE_Fortran_FLAGS = '-O2'"
+  "After EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "After EL: CMAKE_C_FLAGS = '-O0'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "After EL: CMAKE_CXX_FLAGS = '-O1'"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "After EL: CMAKE_Fortran_FLAGS = '-O2'"
   )
+  # Above shows that raw CMake handles its CMkae vars as you would expect.
 
-ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cmake1_env2
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_env1_cmake2
   FALSE
-  ""  ""
-  ""  ""
-  "${CXX_COMPILER_1}"  "-Wall"
-  "${CXX_COMPILER_2}"  "-Wlong-long"
-  ""  ""
-  ""  ""
+  "${C_COMPILER_1}"  "-bad-c" # Ignored
+  "${C_COMPILER_2}"  "-O0"
+  "${CXX_COMPILER_1}"  "-bad-c++"  # Ignored
+  "${CXX_COMPILER_2}"  "-O1"
+  "${Fortran_COMPILER_1}"  "-bad-fortran"  # Ignored
+  "${Fortran_COMPILER_2}"  "-O2"
+  "Before XSDK: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before XSDK: CMAKE_C_FLAGS = '-O0'"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-O1'"
+  "Before XSDK: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before XSDK: CMAKE_Fortran_FLAGS = '-O2'"
+  "Before EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before EL: CMAKE_C_FLAGS = '-O0'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before EL: CMAKE_CXX_FLAGS = '-O1'"
+  "Before EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before EL: CMAKE_Fortran_FLAGS = '-O2'"
+  "After EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "After EL: CMAKE_C_FLAGS = '-O0'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "After EL: CMAKE_CXX_FLAGS = '-O1'"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "After EL: CMAKE_Fortran_FLAGS = '-O2'"
   )
-
+  # Above shows the with raw CMake, the CMake vars override the env vars, as
+  # it should.
 
 #
 # Test cases UseXsdkDefaults
@@ -313,20 +342,43 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_none
   ""  ""
   ""  ""
   ""  ""
-  "USE_XSDK_DEFAULTS = 'TRUE'"
+  "Before XSDK: CMAKE_C_COMPILER = ''"
+  "Before XSDK: CMAKE_C_FLAGS = ''"
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
   "Before XSDK: CMAKE_CXX_FLAGS = ''"
+  "Before XSDK: CMAKE_Fortran_COMPILER = ''"
+  "Before XSDK: CMAKE_Fortran_FLAGS = ''"
   "Before XSDK: BUILD_SHARED_LIBS = ''"
   "Before XSDK: CMAKE_BUILD_TYPE = ''"
-  "XSDK: Setting default for BUILD_SHARED_LIBS to TRUE!"
-  "XSDK: Setting default for CMAKE_BUILD_TYPE to DEBUG!"
+  "Before XSDK: CMAKE_C_COMPILER = ''"
+  "Before XSDK: CMAKE_CXX_COMPILER = ''"
+  "Before XSDK: CMAKE_Fortran_COMPILER = ''"
+  "USE_XSDK_DEFAULTS = 'TRUE'"
+  "XSDK: Setting default BUILD_SHARED_LIBS=TRUE"
+  "XSDK: Setting default CMAKE_BUILD_TYPE=DEBUG"
+  "Before EL: CMAKE_C_COMPILER = ''"
+  "Before EL: CMAKE_C_FLAGS = ''"
   "Before EL: CMAKE_CXX_COMPILER = ''"
+  "Before EL: CMAKE_CXX_FLAGS = ''"
+  "Before EL: CMAKE_Fortran_COMPILER = ''"
+  "Before EL: CMAKE_Fortran_FLAGS = ''"
   "Before EL: BUILD_SHARED_LIBS = 'TRUE'"
   "Before EL: CMAKE_BUILD_TYPE = 'DEBUG'"
+  "Setting CMAKE_C_COMPILER=gcc so that CMake finds the default"
+  "After EL: CMAKE_C_COMPILER = '${C_DEFAULT_COMPILER}'"
+  "After EL: CMAKE_C_FLAGS = ''"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_DEFAULT_COMPILER}'"
+  "After EL: CMAKE_CXX_FLAGS = ''"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_DEFAULT_COMPILER}'"
+  "After EL: CMAKE_Fortran_FLAGS = ''"
+  "After EL: BUILD_SHARED_LIBS = 'TRUE'"
+  "After EL: CMAKE_BUILD_TYPE = 'DEBUG'"
   )
+  # Above, by default XSDKDefaults.cmake just lets CMake pick the default
+  # compilers but it does set BUILD_SHARED_LIBS=TRUE and
+  # CMAKE_BUILD_TYPE=DEBUG.
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_cmake1_none
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_env1_none
   TRUE
   "${C_COMPILER_1}"  "-O0"
   ""  ""
@@ -358,36 +410,70 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_cmake1_none
   "After EL: CMAKE_CXX_FLAGS = '-O1 '"
   "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_1}'"
   "After EL: CMAKE_Fortran_FLAGS = '-O2 '"
+  "After EL: BUILD_SHARED_LIBS = 'TRUE'"
+  "After EL: CMAKE_BUILD_TYPE = 'DEBUG'"
   )
+  # Above, XSDKDefaults.cmake print out that the env vars are being used and
+  # sets the CMake vars before CMake does its default thing.
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_env2
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_cmake2
   TRUE
   ""  ""
+  "${C_COMPILER_2}"  "-O0"
   ""  ""
+  "${CXX_COMPILER_2}"  "-O1"
   ""  ""
-  "${CXX_COMPILER_2}"  "-Wlong-long"
-  ""  ""
-  ""  ""
+  "${Fortran_COMPILER_2}"  "-O2"
+  "Before XSDK: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before XSDK: CMAKE_C_FLAGS = '-O0'"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-O1'"
+  "Before XSDK: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before XSDK: CMAKE_Fortran_FLAGS = '-O2'"
+  "Before EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before EL: CMAKE_C_FLAGS = '-O0'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before EL: CMAKE_CXX_FLAGS = '-O1'"
+  "Before EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before EL: CMAKE_Fortran_FLAGS = '-O2'"
+  "After EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "After EL: CMAKE_C_FLAGS = '-O0'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "After EL: CMAKE_CXX_FLAGS = '-O1'"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "After EL: CMAKE_Fortran_FLAGS = '-O2'"
+  "After EL: BUILD_SHARED_LIBS = 'TRUE'"
+  "After EL: CMAKE_BUILD_TYPE = 'DEBUG'"
   )
+  # Above, the CMake vars just pass through unaffected by XSDKDefaults.cmake
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_cmake1_env2
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_env1_cmake2
   TRUE
-  ""  ""
-  ""  ""
-  "${CXX_COMPILER_1}"  "-Wall"
-  "${CXX_COMPILER_2}"  "-Wlong-long"
-  ""  ""
-  ""  ""
+  "${C_COMPILER_1}"  "-bad-c" # Ignored
+  "${C_COMPILER_2}"  "-O0"
+  "${CXX_COMPILER_1}"  "-bad-c++"  # Ignored
+  "${CXX_COMPILER_2}"  "-O1"
+  "${Fortran_COMPILER_1}"  "-bad-fortran"  # Ignored
+  "${Fortran_COMPILER_2}"  "-O2"
+  "Before XSDK: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before XSDK: CMAKE_C_FLAGS = '-O0'"
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before XSDK: CMAKE_CXX_FLAGS = '-O1'"
+  "Before XSDK: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before XSDK: CMAKE_Fortran_FLAGS = '-O2'"
+  "Before EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "Before EL: CMAKE_C_FLAGS = '-O0'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "Before EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "Before EL: CMAKE_CXX_FLAGS = '-O1'"
+  "Before EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "Before EL: CMAKE_Fortran_FLAGS = '-O2'"
+  "After EL: CMAKE_C_COMPILER = '${C_COMPILER_2}'"
+  "After EL: CMAKE_C_FLAGS = '-O0'"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
-  "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
+  "After EL: CMAKE_CXX_FLAGS = '-O1'"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_2}'"
+  "After EL: CMAKE_Fortran_FLAGS = '-O2'"
+  "After EL: BUILD_SHARED_LIBS = 'TRUE'"
+  "After EL: CMAKE_BUILD_TYPE = 'DEBUG'"
   )
+  # Above, the CMake vars override what is in the env with XSDK behavior too
