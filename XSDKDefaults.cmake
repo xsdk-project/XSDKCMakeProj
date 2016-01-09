@@ -39,59 +39,27 @@ ENDIF()
 
 
 MACRO(XSDK_HANDLE_LANG_DEFAULTS  CMAKE_LANG_NAME  ENV_LANG_NAME  LANG_DEFAULT_COMPILERS)
-  
-  IF (XSDK_USE_COMPILER_ENV_VARS)
 
-    # Announce using env var ${ENV_LANG_NAME}
-    IF (NOT "$ENV{${ENV_LANG_NAME}}" STREQUAL "" AND
-      "${CMAKE_${CMAKE_LANG_NAME}_COMPILER}" STREQUAL ""
-      )
-      MESSAGE("XSDK: Setting CMAKE_${CMAKE_LANG_NAME}_COMPILER from env var"
-        " ${ENV_LANG_NAME}='$ENV{${ENV_LANG_NAME}}'!")
-      SET(CMAKE_${CMAKE_LANG_NAME}_COMPILER "$ENV{${ENV_LANG_NAME}}" CACHE FILEPATH
-        "XSDK: Set by default from env var ${ENV_LANG_NAME}")
-    ENDIF()
-
-    # Announce using env var ${ENV_LANG_NAME}FLAGS
-    IF (NOT "$ENV{${ENV_LANG_NAME}FLAGS}" STREQUAL "" AND
-      "${CMAKE_${CMAKE_LANG_NAME}_FLAGS}" STREQUAL ""
-      )
-      MESSAGE("XSDK: Setting CMAKE_${CMAKE_LANG_NAME}_FLAGS from env var"
-        " ${ENV_LANG_NAME}FLAGS='$ENV{${ENV_LANG_NAME}FLAGS}'!")
-      SET(CMAKE_${CMAKE_LANG_NAME}_FLAGS "$ENV{${ENV_LANG_NAME}FLAGS} " CACHE  STRING
-        "XSDK: Set by default from env var ${ENV_LANG_NAME}FLAGS")
-      # NOTE: CMake adds the space after ${${ENV_LANG_NAME}FLAGS} so we duplicate that here!
-    ENDIF()
-
-  ELSE()
-
-    # Ignore env var ${ENV_LANG_NAME}
-    IF (NOT "$ENV{${ENV_LANG_NAME}}" STREQUAL "" AND
-      "${CMAKE_${CMAKE_LANG_NAME}_COMPILER}" STREQUAL ""
-      )
-      MESSAGE("XSDK: NOT setting CMAKE_${CMAKE_LANG_NAME}_COMPILER from env var"
-        " ${ENV_LANG_NAME}='$ENV{${ENV_LANG_NAME}}'!")
-      # Got to find the default C++ compiler so
-      # ENABLE_LANGAUGE(${CMAKE_LANG_NAME}) does not pick up the
-      # ${ENV_LANG_NAME} set in the env!  No way to avoid this that I can see.
-      FIND_PROGRAM(DEFAULT_${CMAKE_LANG_NAME}_COMPILER  NAMES  ${LANG_DEFAULT_COMPILERS})
-      SET(CMAKE_${CMAKE_LANG_NAME}_COMPILER "${DEFAULT_${CMAKE_LANG_NAME}_COMPILER}"
-        CACHE FILEPATH
-        "XSDK: Ignoring default set by env var ${ENV_LANG_NAME}")
-    ENDIF()
-
-    # Ignore env var ${CMAKE_LANG_NAME}FLAGS
-    IF (NOT "$ENV{${ENV_LANG_NAME}FLAGS}" STREQUAL "" AND
-      "${CMAKE_${CMAKE_LANG_NAME}_FLAGS}" STREQUAL ""
-      )
-      MESSAGE("XSDK: NOT setting CMAKE_${CMAKE_LANG_NAME}_FLAGS from env var"
-        " ${ENV_LANG_NAME}FLAGS='$ENV{${ENV_LANG_NAME}FLAGS}'!")
-      SET(CMAKE_${CMAKE_LANG_NAME}_FLAGS "" CACHE  STRING
-        "XSDK: Ignoring default set by env var ${ENV_LANG_NAME}FLAGS")
-    ENDIF()
-
+  # Announce using env var ${ENV_LANG_NAME}
+  IF (NOT "$ENV{${ENV_LANG_NAME}}" STREQUAL "" AND
+    "${CMAKE_${CMAKE_LANG_NAME}_COMPILER}" STREQUAL ""
+    )
+    MESSAGE("XSDK: Setting CMAKE_${CMAKE_LANG_NAME}_COMPILER from env var"
+      " ${ENV_LANG_NAME}='$ENV{${ENV_LANG_NAME}}'!")
+    SET(CMAKE_${CMAKE_LANG_NAME}_COMPILER "$ENV{${ENV_LANG_NAME}}" CACHE FILEPATH
+      "XSDK: Set by default from env var ${ENV_LANG_NAME}")
   ENDIF()
 
+  # Announce using env var ${ENV_LANG_NAME}FLAGS
+  IF (NOT "$ENV{${ENV_LANG_NAME}FLAGS}" STREQUAL "" AND
+    "${CMAKE_${CMAKE_LANG_NAME}_FLAGS}" STREQUAL ""
+    )
+    MESSAGE("XSDK: Setting CMAKE_${CMAKE_LANG_NAME}_FLAGS from env var"
+      " ${ENV_LANG_NAME}FLAGS='$ENV{${ENV_LANG_NAME}FLAGS}'!")
+    SET(CMAKE_${CMAKE_LANG_NAME}_FLAGS "$ENV{${ENV_LANG_NAME}FLAGS} " CACHE  STRING
+      "XSDK: Set by default from env var ${ENV_LANG_NAME}FLAGS")
+    # NOTE: CMake adds the space after ${${ENV_LANG_NAME}FLAGS} so we duplicate that here!
+  ENDIF()
 
 ENDMACRO()
 
@@ -122,10 +90,6 @@ SET(XSDK_ENABLE_Fortran  TRUE  CACHE BOOL
 
 # Set default compilers and flags
 IF (USE_XSDK_DEFAULTS)
-
-  SET(XSDK_USE_COMPILER_ENV_VARS  FALSE  CACHE  BOOL
-    "When in XSDK mode, read defaults for compilers and flags from env.")
-  PRINT_VAR(XSDK_USE_COMPILER_ENV_VARS)
 
   # Handle env vars for lanaguages C, C++, and Fortran
 
