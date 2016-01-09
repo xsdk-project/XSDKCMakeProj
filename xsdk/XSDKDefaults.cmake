@@ -8,10 +8,17 @@
 # This module implements standard behavior for XSDK CMake projects.  The main
 # thing it does in XSDK mode (i.e. USE_XSDK_DEFAULTS=TRUE) is to print out
 # when the env vars CC, CXX, FC and compiler flags CFLAGS, CXXFLAGS, and
-# FFLAGS are used to select the compilers and compiler flags (raw CMake does
-# this silently) and to set BUILD_SHARED_LIBS=TRUE and CMAKE_BUILD_TYPE=DEBUG
-# by default.  It does not implement *all* of the standard XSDK configuration
-# parameters.  The parent CMake project must do that.
+# FFLAGS/FCFLAGS are used to select the compilers and compiler flags (raw
+# CMake does this silently) and to set BUILD_SHARED_LIBS=TRUE and
+# CMAKE_BUILD_TYPE=DEBUG by default.  It does not implement *all* of the
+# standard XSDK configuration parameters.  The parent CMake project must do
+# that.
+#
+# Note that when USE_XSDK_DEFAULTS=TRUE, then the Fortran flags will be read
+# from either of the env vars FFLAGS or FCFLAGS.  If both are set, but are the
+# same, then FFLAGS it used (which is the same as FCFLAGS).  However, if both
+# are set but are not equal, then a FATAL_ERROR is raised and CMake configure
+# processing is stopped.
 #
 # To be used in a parent project, this module must be included after
 #
@@ -97,7 +104,7 @@ SET_DEFAULT(XSDK_ENABLE_Fortran  TRUE)
 
 # Handle the compiler and flags for a language
 MACRO(XSDK_HANDLE_LANG_DEFAULTS  CMAKE_LANG_NAME  ENV_LANG_NAME
-  ENV_LANG_FLAGS_NAME
+  ENV_LANG_FLAGS_NAMES
   )
 
   # Announce using env var ${ENV_LANG_NAME}
@@ -111,16 +118,18 @@ MACRO(XSDK_HANDLE_LANG_DEFAULTS  CMAKE_LANG_NAME  ENV_LANG_NAME
   ENDIF()
 
   # Announce using env var ${ENV_LANG_FLAGS_NAME}
-  IF (NOT "$ENV{${ENV_LANG_FLAGS_NAME}}" STREQUAL "" AND
-    "${CMAKE_${CMAKE_LANG_NAME}_FLAGS}" STREQUAL ""
-    )
-    MESSAGE("XSDK: Setting CMAKE_${CMAKE_LANG_NAME}_FLAGS from env var"
-      " ${ENV_LANG_FLAGS_NAME}='$ENV{${ENV_LANG_FLAGS_NAME}}'!")
-    SET(CMAKE_${CMAKE_LANG_NAME}_FLAGS "$ENV{${ENV_LANG_FLAGS_NAME}} " CACHE  STRING
-      "XSDK: Set by default from env var ${ENV_LANG_FLAGS_NAME}")
-    # NOTE: CMake adds the space after $ENV{${ENV_LANG_FLAGS_NAME}} so we
-    # duplicate that here!
-  ENDIF()
+  FOREACH(ENV_LANG_FLAGS_NAME  ${ENV_LANG_FLAGS_NAMES})
+    IF (NOT "$ENV{${ENV_LANG_FLAGS_NAME}}" STREQUAL "" AND
+      "${CMAKE_${CMAKE_LANG_NAME}_FLAGS}" STREQUAL ""
+      )
+      MESSAGE("XSDK: Setting CMAKE_${CMAKE_LANG_NAME}_FLAGS from env var"
+        " ${ENV_LANG_FLAGS_NAME}='$ENV{${ENV_LANG_FLAGS_NAME}}'!")
+      SET(CMAKE_${CMAKE_LANG_NAME}_FLAGS "$ENV{${ENV_LANG_FLAGS_NAME}} " CACHE  STRING
+        "XSDK: Set by default from env var ${ENV_LANG_FLAGS_NAME}")
+      # NOTE: CMake adds the space after $ENV{${ENV_LANG_FLAGS_NAME}} so we
+      # duplicate that here!
+    ENDIF()
+  ENDFOREACH()
 
 ENDMACRO()
 
@@ -143,7 +152,19 @@ IF (USE_XSDK_DEFAULTS)
   ENDIF()
 
   IF (XSDK_ENABLE_Fortran)
-    XSDK_HANDLE_LANG_DEFAULTS(Fortran  FC  FFLAGS)
+    SET(ENV_FFLAGS "$ENV{FFLAGS}")
+    SET(ENV_FCFLAGS "$ENV{FCFLAGS}")
+    IF (
+      (NOT "${ENV_FFLAGS}" STREQUAL "") AND (NOT "${ENV_FCFLAGS}" STREQUAL "")
+      AND
+      ("${CMAKE_Fortran_FLAGS}" STREQUAL "")
+      )
+      IF (NOT "${ENV_FFLAGS}" STREQUAL "${ENV_FCFLAGS}")
+        MESSAGE(FATAL_ERROR "Error, env vars FFLAGS='${ENV_FFLAGS}' and"
+          " FCFLAGS='${ENV_FCFLAGS}' are both set in the env but are not equal!")
+      ENDIF()
+    ENDIF()
+    XSDK_HANDLE_LANG_DEFAULTS(Fortran  FC  "FFLAGS;FCFLAGS")
   ENDIF()
   
   # Set XSDK defaults for other CMake variables
