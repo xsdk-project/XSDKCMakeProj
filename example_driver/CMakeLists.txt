@@ -1,3 +1,10 @@
+#
+# This is a dummy CMake project for testing XSDKDefaults.cmake
+#
+# But this is also simple enough that it can be a concrete example on how to
+# and where to include XSDKDefaults.cmake.
+#
+
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 
 #
