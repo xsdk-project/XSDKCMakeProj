@@ -38,7 +38,9 @@ IF (NOT COMMAND PRINT_VAR)
 ENDIF()
 
 
-MACRO(XSDK_HANDLE_LANG_DEFAULTS  CMAKE_LANG_NAME  ENV_LANG_NAME  LANG_DEFAULT_COMPILERS)
+MACRO(XSDK_HANDLE_LANG_DEFAULTS  CMAKE_LANG_NAME  ENV_LANG_NAME
+  ENV_LANG_FLAGS_NAME
+  )
 
   # Announce using env var ${ENV_LANG_NAME}
   IF (NOT "$ENV{${ENV_LANG_NAME}}" STREQUAL "" AND
@@ -50,15 +52,16 @@ MACRO(XSDK_HANDLE_LANG_DEFAULTS  CMAKE_LANG_NAME  ENV_LANG_NAME  LANG_DEFAULT_CO
       "XSDK: Set by default from env var ${ENV_LANG_NAME}")
   ENDIF()
 
-  # Announce using env var ${ENV_LANG_NAME}FLAGS
-  IF (NOT "$ENV{${ENV_LANG_NAME}FLAGS}" STREQUAL "" AND
+  # Announce using env var ${ENV_LANG_FLAGS_NAME}
+  IF (NOT "$ENV{${ENV_LANG_FLAGS_NAME}}" STREQUAL "" AND
     "${CMAKE_${CMAKE_LANG_NAME}_FLAGS}" STREQUAL ""
     )
     MESSAGE("XSDK: Setting CMAKE_${CMAKE_LANG_NAME}_FLAGS from env var"
-      " ${ENV_LANG_NAME}FLAGS='$ENV{${ENV_LANG_NAME}FLAGS}'!")
-    SET(CMAKE_${CMAKE_LANG_NAME}_FLAGS "$ENV{${ENV_LANG_NAME}FLAGS} " CACHE  STRING
-      "XSDK: Set by default from env var ${ENV_LANG_NAME}FLAGS")
-    # NOTE: CMake adds the space after ${${ENV_LANG_NAME}FLAGS} so we duplicate that here!
+      " ${ENV_LANG_FLAGS_NAME}='$ENV{${ENV_LANG_FLAGS_NAME}}'!")
+    SET(CMAKE_${CMAKE_LANG_NAME}_FLAGS "$ENV{${ENV_LANG_FLAGS_NAME}} " CACHE  STRING
+      "XSDK: Set by default from env var ${ENV_LANG_FLAGS_NAME}")
+    # NOTE: CMake adds the space after $ENV{${ENV_LANG_FLAGS_NAME}} so we
+    # duplicate that here!
   ENDIF()
 
 ENDMACRO()
@@ -93,17 +96,17 @@ IF (USE_XSDK_DEFAULTS)
 
   # Handle env vars for lanaguages C, C++, and Fortran
 
-#  IF (XSDK_ENABLE_C)
-#    XSDK_HANDLE_LANG_DEFAULTS(C  CC  "cc;gcc")
-#  ENDIF()
-
-  IF (XSDK_ENABLE_CXX)
-    XSDK_HANDLE_LANG_DEFAULTS(CXX  CXX  "c++;g++")
+  IF (XSDK_ENABLE_C)
+    XSDK_HANDLE_LANG_DEFAULTS(C  CC  CFLAGS)
   ENDIF()
 
-#  IF (XSDK_ENABLE_Fotran)
-#    XSDK_HANDLE_LANG_DEFAULTS(Fortran  FC  "gfortran;f90")
-#  ENDIF()
+  IF (XSDK_ENABLE_CXX)
+    XSDK_HANDLE_LANG_DEFAULTS(CXX  CXX  CXXFLAGS)
+  ENDIF()
+
+  IF (XSDK_ENABLE_Fortran)
+    XSDK_HANDLE_LANG_DEFAULTS(Fortran  FC  FFLAGS)
+  ENDIF()
   
   # Set XSDK defaults for other CMake variables
   

@@ -134,8 +134,12 @@ INCLUDE(TribitsAddAdvancedTest)
 
 FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
   USE_XSDK_DEFAULTS
+  ENV_C_TO_USE  ENV_C_FLAGS_TO_USE
+  CMAKE_C_TO_USE  CMAKE_C_FLAGS_TO_USE
   ENV_CXX_TO_USE  ENV_CXX_FLAGS_TO_USE
   CMAKE_CXX_TO_USE  CMAKE_CXX_FLAGS_TO_USE
+  ENV_Fortran_TO_USE  ENV_Fortran_FLAGS_TO_USE
+  CMAKE_Fortran_TO_USE  CMAKE_Fortran_FLAGS_TO_USE
   )
  
   SET(EXAMPLE_DRIVER_PROJ_DIR  "${CMAKE_CURRENT_SOURCE_DIR}/example_driver")
@@ -148,15 +152,33 @@ FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
   ENDFOREACH()
 
   SET(CMND_ARGS)
+
   IF (USE_XSDK_DEFAULTS)
     LIST(APPEND  CMND_ARGS  -DUSE_XSDK_DEFAULTS=${USE_XSDK_DEFAULTS})
   ENDIF()
+
+  IF (CMAKE_C_TO_USE)
+    LIST(APPEND  CMND_ARGS  -DCMAKE_C_COMPILER=${CMAKE_C_TO_USE})
+  ENDIF()
+  IF (CMAKE_C_FLAGS_TO_USE)
+    LIST(APPEND  CMND_ARGS  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS_TO_USE})
+  ENDIF()
+
   IF (CMAKE_CXX_TO_USE)
     LIST(APPEND  CMND_ARGS  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_TO_USE})
   ENDIF()
   IF (CMAKE_CXX_FLAGS_TO_USE)
     LIST(APPEND  CMND_ARGS  -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS_TO_USE})
   ENDIF()
+
+  IF (CMAKE_Fortran_TO_USE)
+    LIST(APPEND  CMND_ARGS  -DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_TO_USE})
+  ENDIF()
+  IF (CMAKE_Fortran_FLAGS_TO_USE)
+    LIST(APPEND  CMND_ARGS  -DCMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS_TO_USE})
+  ENDIF()
+
+#  MESSAGE("${TEST_NAME}: CMND_ARGS: ${CMND_ARGS}")
 
   TRIBITS_ADD_ADVANCED_TEST(${TEST_NAME}
     OVERALL_WORKING_DIRECTORY  TEST_NAME
@@ -166,7 +188,10 @@ FUNCTION( ADD_XSDK_TEST_CASE  TEST_NAME
         ${EXAMPLE_DRIVER_PROJ_DIR}
       PASS_REGULAR_EXPRESSION_ALL
         ${PASS_REGEX_STR_ARRAY}
-    ENVIRONMENT CXX=${ENV_CXX_TO_USE}  CXXFLAGS=${ENV_CXX_FLAGS_TO_USE}
+    ENVIRONMENT
+      CC=${ENV_C_TO_USE}  CFLAGS=${ENV_C_FLAGS_TO_USE}
+      CXX=${ENV_CXX_TO_USE}  CXXFLAGS=${ENV_CXX_FLAGS_TO_USE}
+      FC=${ENV_Fortran_TO_USE}  FFLAGS=${ENV_Fortran_FLAGS_TO_USE}
     )
 
 ENDFUNCTION()
@@ -178,6 +203,10 @@ ENDFUNCTION()
 
 ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_none
   FALSE
+  ""  ""
+  ""  ""
+  ""  ""
+  ""  ""
   ""  ""
   ""  ""
   "Before XSDK: CMAKE_C_COMPILER = ''"
@@ -211,22 +240,42 @@ ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_none
   "After EL: CMAKE_BUILD_TYPE = ''"
   )
 
-ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cxx1_none
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cmake1_none
   FALSE
-  "${CXX_COMPILER_1}"  "-Wall"
+  "${C_COMPILER_1}"  "-O0"
   ""  ""
+  "${CXX_COMPILER_1}"  "-O1"
+  ""  ""
+  "${Fortran_COMPILER_1}"  "-O2"
+  ""  ""
+  "Before XSDK: CMAKE_C_COMPILER = ''"
+  "Before XSDK: CMAKE_C_FLAGS = ''"
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
   "Before XSDK: CMAKE_CXX_FLAGS = ''"
+  "Before XSDK: CMAKE_Fortran_COMPILER = ''"
+  "Before XSDK: CMAKE_Fortran_FLAGS = ''"
+  "Before EL: CMAKE_C_COMPILER = ''"
+  "Before EL: CMAKE_C_FLAGS = ''"
   "Before EL: CMAKE_CXX_COMPILER = ''"
   "Before EL: CMAKE_CXX_FLAGS = ''"
+  "Before EL: CMAKE_Fortran_COMPILER = ''"
+  "Before EL: CMAKE_Fortran_FLAGS = ''"
+  "After EL: CMAKE_C_COMPILER = '${C_COMPILER_1}'"
+  "After EL: CMAKE_C_FLAGS = '-O0 '"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
-  "After EL: CMAKE_CXX_FLAGS = '-Wall '"
+  "After EL: CMAKE_CXX_FLAGS = '-O1 '"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_1}'"
+  "After EL: CMAKE_Fortran_FLAGS = '-O2 '"
   )
 
-ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_cxx2
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_env2
   FALSE
   ""  ""
+  ""  ""
+  ""  ""
   "${CXX_COMPILER_2}"  "-Wlong-long"
+  ""  ""
+  ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
@@ -235,10 +284,14 @@ ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_none_cxx2
   "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
-ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cxx1_cxx2
+ADD_XSDK_TEST_CASE( NoUseXsdkDefaults_cmake1_env2
   FALSE
+  ""  ""
+  ""  ""
   "${CXX_COMPILER_1}"  "-Wall"
   "${CXX_COMPILER_2}"  "-Wlong-long"
+  ""  ""
+  ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
@@ -256,6 +309,10 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_none
   TRUE
   ""  ""
   ""  ""
+  ""  ""
+  ""  ""
+  ""  ""
+  ""  ""
   "USE_XSDK_DEFAULTS = 'TRUE'"
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
   "Before XSDK: CMAKE_CXX_FLAGS = ''"
@@ -269,24 +326,48 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_none
   "After EL: CMAKE_CXX_COMPILER = '${CXX_DEFAULT_COMPILER}'"
   )
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_cxx1_none
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_cmake1_none
   TRUE
-  "${CXX_COMPILER_1}"  "-Wall"
+  "${C_COMPILER_1}"  "-O0"
   ""  ""
+  "${CXX_COMPILER_1}"  "-O1"
+  ""  ""
+  "${Fortran_COMPILER_1}"  "-O2"
+  ""  ""
+  "Before XSDK: CMAKE_C_COMPILER = ''"
+  "Before XSDK: CMAKE_C_FLAGS = ''"
   "Before XSDK: CMAKE_CXX_COMPILER = ''"
   "Before XSDK: CMAKE_CXX_FLAGS = ''"
-  "XSDK: Setting CMAKE_CXX_COMPILER from env var CXX='/usr/bin/c++'!"
-  "XSDK: Setting CMAKE_CXX_FLAGS from env var CXXFLAGS='-Wall'!"
+  "Before XSDK: CMAKE_Fortran_COMPILER = ''"
+  "Before XSDK: CMAKE_Fortran_FLAGS = ''"
+  "XSDK: Setting CMAKE_C_COMPILER from env var CC='${C_COMPILER_1}'!"
+  "XSDK: Setting CMAKE_C_FLAGS from env var CFLAGS='-O0'!"
+  "XSDK: Setting CMAKE_CXX_COMPILER from env var CXX='${CXX_COMPILER_1}'!"
+  "XSDK: Setting CMAKE_CXX_FLAGS from env var CXXFLAGS='-O1'!"
+  "XSDK: Setting CMAKE_Fortran_COMPILER from env var FC='${Fortran_COMPILER_1}'!"
+  "XSDK: Setting CMAKE_Fortran_FLAGS from env var FFLAGS='-O2'!"
+  "Before EL: CMAKE_C_COMPILER = '${C_COMPILER_1}'"
+  "Before EL: CMAKE_C_FLAGS = '-O0 '"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
-  "Before EL: CMAKE_CXX_FLAGS = '-Wall '"
+  "Before EL: CMAKE_CXX_FLAGS = '-O1 '"
+  "Before EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_1}'"
+  "Before EL: CMAKE_Fortran_FLAGS = '-O2 '"
+  "After EL: CMAKE_C_COMPILER = '${C_COMPILER_1}'"
+  "After EL: CMAKE_C_FLAGS = '-O0 '"
   "After EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_1}'"
-  "After EL: CMAKE_CXX_FLAGS = '-Wall '"
+  "After EL: CMAKE_CXX_FLAGS = '-O1 '"
+  "After EL: CMAKE_Fortran_COMPILER = '${Fortran_COMPILER_1}'"
+  "After EL: CMAKE_Fortran_FLAGS = '-O2 '"
   )
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_cxx2
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_env2
   TRUE
   ""  ""
+  ""  ""
+  ""  ""
   "${CXX_COMPILER_2}"  "-Wlong-long"
+  ""  ""
+  ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
@@ -295,10 +376,14 @@ ADD_XSDK_TEST_CASE( UseXsdkDefaults_none_cxx2
   "After EL: CMAKE_CXX_FLAGS = '-Wlong-long'"
   )
 
-ADD_XSDK_TEST_CASE( UseXsdkDefaults_cxx1_cxx2
+ADD_XSDK_TEST_CASE( UseXsdkDefaults_cmake1_env2
   TRUE
+  ""  ""
+  ""  ""
   "${CXX_COMPILER_1}"  "-Wall"
   "${CXX_COMPILER_2}"  "-Wlong-long"
+  ""  ""
+  ""  ""
   "Before XSDK: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
   "Before XSDK: CMAKE_CXX_FLAGS = '-Wlong-long'"
   "Before EL: CMAKE_CXX_COMPILER = '${CXX_COMPILER_2}'"
