@@ -10,7 +10,7 @@
 # does by default in XSDK mode is to ignore compiler vars in the env if they
 # are set using CC, CXX, FC and compiler flags CFLAGS, CXXFLAGS, and FFLAGS.
 #
-# This module must be included after:
+# This module must be included after
 #
 #   PROJECT(${PROJECT_NAME}  NONE)
 #
@@ -21,17 +21,22 @@
 # The major downside of this specification is that when USE_XSDK_DEFAULTS=TRUE
 # but XSDK_USE_COMPILER_ENV_VARS=FALSE, then the default compilers must be
 # searched for here instead of inside of ENABLE_LANGAUGE(<LANG>) .  This is
-# because if go into ENABLE_LANGAUGE(<LANG>) then CMake will set the default
-# compilers by reading the env vars.  If you don't like the default compilers
-# picked by this module, set XSDK_USE_COMPILER_ENV_VARS=TRUE (which is the
-# CMake default anyway).
+# because if you go into ENABLE_LANGAUGE(<LANG>) then CMake will set the
+# default compilers by reading the env vars.  If you don't like the default
+# compilers picked by this module, set XSDK_USE_COMPILER_ENV_VARS=TRUE (which
+# is the CMake default anyway).
 # 
 
-FUNCTION(PRINT_VAR  VAR_NAME)
-  MESSAGE("${VAR_NAME} = '${${VAR_NAME}}'")
-ENDFUNCTION()
+IF (NOT COMMAND PRINT_VAR)
+  FUNCTION(PRINT_VAR  VAR_NAME)
+    MESSAGE("${VAR_NAME} = '${${VAR_NAME}}'")
+  ENDFUNCTION()
+ENDIF()
 
-SET(USE_XSDK_DEFAULTS  FALSE  CACHE  BOOL
+IF ("${USE_XSDK_DEFAULTS_DEFAULT}" STREQUAL "")
+  SET(USE_XSDK_DEFAULTS_DEFAULT  FALSE)
+ENDIF()
+SET(USE_XSDK_DEFAULTS  ${USE_XSDK_DEFAULTS_DEFAULT}  CACHE  BOOL
   "Use XSDK defaults and behavior.")
 PRINT_VAR(USE_XSDK_DEFAULTS)
 
