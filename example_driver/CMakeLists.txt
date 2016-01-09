@@ -36,7 +36,7 @@ MESSAGE("\nPrint variables before applying XSDK defaults:")
 PRINT_XSDK_RELATED_VARS("Before XSDK")
 
 MESSAGE("\nProcess XSDK defaults ...")
-INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../XSDKDefaults.cmake")
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../xsdk/XSDKDefaults.cmake")
 
 MESSAGE("\nPrint variables after applying XSDK defaults but before enable lang:")
 PRINT_XSDK_RELATED_VARS("Before EL")
